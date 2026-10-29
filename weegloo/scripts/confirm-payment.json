@@ -1,0 +1,447 @@
+{
+  "name": "confirm-payment",
+  "directCallEnabled": true,
+  "anonymousCallEnabled": false,
+  "definition": {
+    "method": "Post",
+    "payloadSchema": {
+      "type": "object",
+      "required": [
+        "orderId"
+      ],
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      }
+    },
+    "statements": [
+      {
+        "type": "ResourceRead",
+        "name": "store",
+        "resource": "Content",
+        "target": {
+          "sys": {
+            "id": "__STORE_ID__"
+          }
+        },
+        "from": "Published"
+      },
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "ResourceRead",
+            "name": "o",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /payload/orderId }"
+              }
+            },
+            "from": "Current"
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-found"
+            },
+            "isError": true,
+            "statusCode": 404
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!=": [
+            "{ /o/sys/contentType/sys/id }",
+            "__CT_ORDER__"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-found"
+            },
+            "isError": true,
+            "statusCode": 404
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!=": [
+            "{ /o/fields/status/en-US }",
+            "pending"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": true,
+              "order": {
+                "id": "{ /o/sys/id }",
+                "orderNo": "{ /o/fields/orderNo/en-US }",
+                "status": "{ /o/fields/status/en-US }",
+                "tableNo": "{ /o/fields/tableNo/en-US }",
+                "orderType": "{ /o/fields/orderType/en-US }",
+                "lines": "{ /o/fields/lines/en-US }",
+                "total": "{ /o/fields/total/en-US }",
+                "note": "{ /o/fields/note/en-US }",
+                "createdAt": "{ /o/sys/createdAt }",
+                "currency": "{ /o/fields/currency/en-US }",
+                "payment": "{ /o/fields/payment/en-US }"
+              },
+              "prepMinutes": "{ /store/fields/prepMinutes/en-US }"
+            },
+            "isError": false,
+            "statusCode": 200
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            "{ /o/fields/stripeSessionId/en-US }"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "unpaid"
+            },
+            "isError": true,
+            "statusCode": 402
+          }
+        ]
+      },
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "Http",
+            "name": "chk",
+            "method": "GET",
+            "url": "https://api.stripe.com/v1/checkout/sessions/{ /o/fields/stripeSessionId/en-US }",
+            "headers": [
+              {
+                "key": "Authorization",
+                "value": "Bearer { /secrets/STRIPE_SECRET_KEY }"
+              }
+            ],
+            "timeoutMs": 10000,
+            "retry": 0,
+            "ignoreStatusCode": true,
+            "responseType": "Json"
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "retry"
+            },
+            "isError": true,
+            "statusCode": 503
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          ">=": [
+            "{ /chk/status }",
+            500
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "retry"
+            },
+            "isError": true,
+            "statusCode": 503
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            {
+              "and": [
+                {
+                  "==": [
+                    "{ /chk/body/payment_status }",
+                    "paid"
+                  ]
+                },
+                {
+                  "==": [
+                    "{ /chk/body/client_reference_id }",
+                    "{ /o/sys/id }"
+                  ]
+                },
+                {
+                  "==": [
+                    "{ /chk/body/amount_total }",
+                    "{ /o/fields/total/en-US }"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "unpaid",
+              "state": "{ /chk/body/status }"
+            },
+            "isError": true,
+            "statusCode": 402
+          }
+        ]
+      },
+      {
+        "type": "SetVar",
+        "var": "clock",
+        "value": {
+          "day": {
+            "$date": [
+              {
+                "$+": [
+                  "{ /now/millis }",
+                  32400000
+                ]
+              },
+              "day"
+            ]
+          }
+        }
+      },
+      {
+        "type": "Loop",
+        "name": "attempt",
+        "while": {
+          "!": [
+            "{ /vars/seq }"
+          ]
+        },
+        "maxIterations": 6,
+        "body": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "ctr",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "from": "Current"
+              },
+              {
+                "type": "ResourcePatch",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "fields": {
+                  "day": "{ /vars/clock/day }",
+                  "seq": {
+                    "$if": [
+                      {
+                        "$==": [
+                          "{ /ctr/fields/day/en-US }",
+                          "{ /vars/clock/day }"
+                        ]
+                      },
+                      {
+                        "$+": [
+                          "{ /ctr/fields/seq/en-US }",
+                          1
+                        ]
+                      },
+                      1
+                    ]
+                  }
+                },
+                "locale": "en-US",
+                "version": "{ /ctr/sys/version }",
+                "publish": false
+              },
+              {
+                "type": "SetVar",
+                "var": "seq",
+                "value": {
+                  "$if": [
+                    {
+                      "$==": [
+                        "{ /ctr/fields/day/en-US }",
+                        "{ /vars/clock/day }"
+                      ]
+                    },
+                    {
+                      "$+": [
+                        "{ /ctr/fields/seq/en-US }",
+                        1
+                      ]
+                    },
+                    1
+                  ]
+                }
+              }
+            ],
+            "catch": [
+              {
+                "type": "If",
+                "condition": false,
+                "then": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            "{ /vars/seq }"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "busy"
+            },
+            "isError": true,
+            "statusCode": 503
+          }
+        ]
+      },
+      {
+        "type": "SetVar",
+        "var": "no",
+        "value": {
+          "$cat": [
+            "A-",
+            {
+              "if": [
+                {
+                  "<": [
+                    "{ /vars/seq }",
+                    10
+                  ]
+                },
+                "00",
+                {
+                  "if": [
+                    {
+                      "<": [
+                        "{ /vars/seq }",
+                        100
+                      ]
+                    },
+                    "0",
+                    ""
+                  ]
+                }
+              ]
+            },
+            "{ /vars/seq }"
+          ]
+        }
+      },
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "ResourcePatch",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /o/sys/id }"
+              }
+            },
+            "fields": {
+              "status": "new",
+              "payment": "paid",
+              "orderNo": "{ /vars/no }",
+              "paymentIntentId": "{ /chk/body/payment_intent }",
+              "businessDay": "{ /vars/clock/day }"
+            },
+            "locale": "en-US",
+            "version": "{ /o/sys/version }",
+            "publish": false,
+            "propagateEvents": true
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "retry"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "Return",
+        "value": {
+          "ok": true,
+          "order": {
+            "id": "{ /o/sys/id }",
+            "orderNo": "{ /vars/no }",
+            "status": "new",
+            "tableNo": "{ /o/fields/tableNo/en-US }",
+            "orderType": "{ /o/fields/orderType/en-US }",
+            "lines": "{ /o/fields/lines/en-US }",
+            "total": "{ /o/fields/total/en-US }",
+            "note": "{ /o/fields/note/en-US }",
+            "createdAt": "{ /o/sys/createdAt }",
+            "currency": "{ /o/fields/currency/en-US }",
+            "payment": "paid"
+          },
+          "prepMinutes": "{ /store/fields/prepMinutes/en-US }"
+        },
+        "isError": false,
+        "statusCode": 200
+      }
+    ],
+    "secrets": [
+      {
+        "key": "STRIPE_SECRET_KEY",
+        "value": "",
+        "description": "Stripe secret key (server-side only)"
+      }
+    ]
+  }
+}

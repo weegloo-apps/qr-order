@@ -1,0 +1,296 @@
+{
+  "name": "refund-order",
+  "directCallEnabled": true,
+  "anonymousCallEnabled": false,
+  "definition": {
+    "method": "Post",
+    "payloadSchema": {
+      "type": "object",
+      "required": [
+        "orderId"
+      ],
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      }
+    },
+    "statements": [
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "ResourceRead",
+            "name": "o",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /payload/orderId }"
+              }
+            },
+            "from": "Current"
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-found"
+            },
+            "isError": true,
+            "statusCode": 404
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!=": [
+            "{ /o/sys/contentType/sys/id }",
+            "__CT_ORDER__"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-found"
+            },
+            "isError": true,
+            "statusCode": 404
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "or": [
+            {
+              "!=": [
+                "{ /o/fields/payment/en-US }",
+                "paid"
+              ]
+            },
+            {
+              "!": [
+                "{ /o/fields/paymentIntentId/en-US }"
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-paid",
+              "payment": "{ /o/fields/payment/en-US }"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            {
+              "in": [
+                "{ /o/fields/status/en-US }",
+                [
+                  "new",
+                  "preparing",
+                  "done"
+                ]
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "not-open",
+              "status": "{ /o/fields/status/en-US }"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "Http",
+            "name": "rf",
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/refunds",
+            "headers": [
+              {
+                "key": "Authorization",
+                "value": "Bearer { /secrets/STRIPE_SECRET_KEY }"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "refund-{ /o/sys/id }"
+              }
+            ],
+            "body": {
+              "payment_intent": "{ /o/fields/paymentIntentId/en-US }",
+              "metadata": {
+                "orderId": "{ /o/sys/id }",
+                "orderNo": "{ /o/fields/orderNo/en-US }"
+              }
+            },
+            "timeoutMs": 15000,
+            "retry": 0,
+            "ignoreStatusCode": true,
+            "responseType": "Json"
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "retry"
+            },
+            "isError": true,
+            "statusCode": 503
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            {
+              "or": [
+                {
+                  "and": [
+                    {
+                      "<": [
+                        "{ /rf/status }",
+                        400
+                      ]
+                    },
+                    {
+                      "in": [
+                        "{ /rf/body/status }",
+                        [
+                          "succeeded",
+                          "pending"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "==": [
+                    "{ /rf/body/error/code }",
+                    "charge_already_refunded"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "refund-failed",
+              "reason": "{ /rf/body/error/code }"
+            },
+            "isError": true,
+            "statusCode": 502
+          }
+        ]
+      },
+      {
+        "type": "Try",
+        "body": [
+          {
+            "type": "ResourcePatch",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /o/sys/id }"
+              }
+            },
+            "fields": {
+              "status": {
+                "$if": [
+                  {
+                    "$==": [
+                      "{ /o/fields/status/en-US }",
+                      "done"
+                    ]
+                  },
+                  "done",
+                  "rejected"
+                ]
+              },
+              "payment": "refunded",
+              "refundId": "{ /rf/body/id }"
+            },
+            "locale": "en-US",
+            "version": "{ /o/sys/version }",
+            "publish": false,
+            "propagateEvents": true
+          }
+        ],
+        "catch": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "retry"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "Return",
+        "value": {
+          "ok": true,
+          "refund": "{ /rf/body/status }",
+          "status": {
+            "$if": [
+              {
+                "$==": [
+                  "{ /o/fields/status/en-US }",
+                  "done"
+                ]
+              },
+              "done",
+              "rejected"
+            ]
+          }
+        },
+        "isError": false,
+        "statusCode": 200
+      }
+    ],
+    "secrets": [
+      {
+        "key": "STRIPE_SECRET_KEY",
+        "value": "",
+        "description": "Stripe secret key (server-side only)"
+      }
+    ]
+  }
+}

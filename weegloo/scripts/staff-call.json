@@ -1,0 +1,308 @@
+{
+  "name": "staff-call",
+  "directCallEnabled": true,
+  "anonymousCallEnabled": false,
+  "definition": {
+    "method": "Post",
+    "payloadSchema": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "create",
+            "cancel"
+          ]
+        },
+        "tableNo": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "requests": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "water",
+              "napkin",
+              "cutlery",
+              "other"
+            ]
+          }
+        },
+        "callId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      }
+    },
+    "statements": [
+      {
+        "type": "If",
+        "condition": {
+          "==": [
+            "{ /payload/action }",
+            "cancel"
+          ]
+        },
+        "then": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "c",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "{ /payload/callId }"
+                  }
+                },
+                "from": "Current"
+              }
+            ],
+            "catch": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "not-found"
+                },
+                "isError": true,
+                "statusCode": 404
+              }
+            ]
+          },
+          {
+            "type": "If",
+            "condition": {
+              "or": [
+                {
+                  "!=": [
+                    "{ /c/sys/contentType/sys/id }",
+                    "__CT_CALL__"
+                  ]
+                },
+                {
+                  "!=": [
+                    "{ /c/fields/status/en-US }",
+                    "open"
+                  ]
+                }
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": true,
+                  "status": "{ /c/fields/status/en-US }"
+                },
+                "isError": false,
+                "statusCode": 200
+              }
+            ]
+          },
+          {
+            "type": "ResourcePatch",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /payload/callId }"
+              }
+            },
+            "fields": {
+              "status": "cancelled"
+            },
+            "locale": "en-US",
+            "publish": false,
+            "propagateEvents": true
+          }
+        ],
+        "else": [
+          {
+            "type": "ResourceRead",
+            "name": "store",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "__STORE_ID__"
+              }
+            },
+            "from": "Published"
+          },
+          {
+            "type": "If",
+            "condition": {
+              "!": [
+                "{ /store/fields/allowStaffCall/en-US }"
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "disabled"
+                },
+                "isError": true,
+                "statusCode": 409
+              }
+            ]
+          },
+          {
+            "type": "If",
+            "condition": {
+              "==": [
+                "{ /payload/tableNo }",
+                null
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "table-required"
+                },
+                "isError": true,
+                "statusCode": 400
+              }
+            ]
+          },
+          {
+            "type": "ResourceCreate",
+            "name": "call",
+            "resource": "Content",
+            "contentType": {
+              "sys": {
+                "id": "__CT_CALL__"
+              }
+            },
+            "fields": {
+              "tableLabel": {
+                "$if": [
+                  {
+                    "$==": [
+                      "{ /payload/tableNo }",
+                      0
+                    ]
+                  },
+                  "Takeout · Queue",
+                  {
+                    "$cat": [
+                      "Table ",
+                      "{ /payload/tableNo }"
+                    ]
+                  }
+                ]
+              },
+              "tableNo": "{ /payload/tableNo }",
+              "requests": {
+                "$if": [
+                  {
+                    "$!!": [
+                      "{ /payload/requests }"
+                    ]
+                  },
+                  "{ /payload/requests }",
+                  []
+                ]
+              },
+              "status": "open"
+            },
+            "locale": "en-US",
+            "publish": false,
+            "propagateEvents": true
+          }
+        ]
+      },
+      {
+        "type": "SetVar",
+        "var": "bumped",
+        "value": false
+      },
+      {
+        "type": "Loop",
+        "name": "attempt",
+        "while": {
+          "!": [
+            "{ /vars/bumped }"
+          ]
+        },
+        "maxIterations": 6,
+        "body": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "ctr",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "from": "Current"
+              },
+              {
+                "type": "ResourcePatch",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "fields": {
+                  "callSeq": {
+                    "$+": [
+                      {
+                        "$if": [
+                          "{ /ctr/fields/callSeq/en-US }",
+                          "{ /ctr/fields/callSeq/en-US }",
+                          0
+                        ]
+                      },
+                      1
+                    ]
+                  }
+                },
+                "locale": "en-US",
+                "version": "{ /ctr/sys/version }",
+                "publish": false
+              },
+              {
+                "type": "SetVar",
+                "var": "bumped",
+                "value": true
+              }
+            ],
+            "catch": [
+              {
+                "type": "SetVar",
+                "var": "bumped",
+                "value": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Return",
+        "value": {
+          "ok": true,
+          "id": "{ /call/sys/id }"
+        },
+        "isError": false,
+        "statusCode": 200
+      }
+    ]
+  }
+}

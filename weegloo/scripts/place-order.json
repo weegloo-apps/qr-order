@@ -1,0 +1,1162 @@
+{
+  "name": "place-order",
+  "directCallEnabled": true,
+  "anonymousCallEnabled": false,
+  "definition": {
+    "method": "Post",
+    "payloadSchema": {
+      "type": "object",
+      "required": [
+        "tableNo",
+        "orderType",
+        "lines"
+      ],
+      "properties": {
+        "tableNo": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "orderType": {
+          "type": "string",
+          "enum": [
+            "here",
+            "togo"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": [
+              "itemId",
+              "qty",
+              "options"
+            ],
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,64}$"
+              },
+              "qty": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50
+              },
+              "options": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "string",
+                  "maxLength": 80
+                }
+              }
+            }
+          }
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "ko",
+            "ja",
+            "zh",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "nl",
+            "th",
+            "vi",
+            "id",
+            "ms",
+            "tr",
+            "pl",
+            "sv",
+            "da",
+            "fi",
+            "nb",
+            "cs"
+          ]
+        }
+      }
+    },
+    "statements": [
+      {
+        "type": "ResourceRead",
+        "name": "store",
+        "resource": "Content",
+        "target": {
+          "sys": {
+            "id": "__STORE_ID__"
+          }
+        },
+        "from": "Published"
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            "{ /store/fields/acceptOrders/en-US }"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "closed"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "SetVar",
+        "var": "clock",
+        "value": {
+          "dow": {
+            "$%": [
+              {
+                "$+": [
+                  {
+                    "$/": [
+                      {
+                        "$-": [
+                          {
+                            "$+": [
+                              "{ /now/millis }",
+                              32400000
+                            ]
+                          },
+                          {
+                            "$%": [
+                              {
+                                "$+": [
+                                  "{ /now/millis }",
+                                  32400000
+                                ]
+                              },
+                              86400000
+                            ]
+                          }
+                        ]
+                      },
+                      86400000
+                    ]
+                  },
+                  4
+                ]
+              },
+              7
+            ]
+          },
+          "min": {
+            "$/": [
+              {
+                "$-": [
+                  {
+                    "$%": [
+                      {
+                        "$+": [
+                          "{ /now/millis }",
+                          32400000
+                        ]
+                      },
+                      86400000
+                    ]
+                  },
+                  {
+                    "$%": [
+                      {
+                        "$+": [
+                          "{ /now/millis }",
+                          32400000
+                        ]
+                      },
+                      60000
+                    ]
+                  }
+                ]
+              },
+              60000
+            ]
+          },
+          "day": {
+            "$date": [
+              {
+                "$+": [
+                  "{ /now/millis }",
+                  32400000
+                ]
+              },
+              "day"
+            ]
+          }
+        }
+      },
+      {
+        "type": "Loop",
+        "name": "h",
+        "over": "{ /store/fields/hours/en-US }",
+        "maxIterations": 7,
+        "body": [
+          {
+            "type": "If",
+            "condition": {
+              "==": [
+                "{ /h/dow }",
+                "{ /vars/clock/dow }"
+              ]
+            },
+            "then": [
+              {
+                "type": "SetVar",
+                "var": "today",
+                "value": "{ /h }"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "or": [
+            {
+              "!": [
+                "{ /vars/today }"
+              ]
+            },
+            {
+              "!": [
+                "{ /vars/today/open }"
+              ]
+            },
+            {
+              "!": [
+                {
+                  "if": [
+                    {
+                      "<": [
+                        "{ /vars/today/fromMin }",
+                        "{ /vars/today/toMin }"
+                      ]
+                    },
+                    {
+                      "and": [
+                        {
+                          ">=": [
+                            "{ /vars/clock/min }",
+                            "{ /vars/today/fromMin }"
+                          ]
+                        },
+                        {
+                          "<": [
+                            "{ /vars/clock/min }",
+                            {
+                              "-": [
+                                "{ /vars/today/toMin }",
+                                "{ /store/fields/lastOrderMinutes/en-US }"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "or": [
+                        {
+                          ">=": [
+                            "{ /vars/clock/min }",
+                            "{ /vars/today/fromMin }"
+                          ]
+                        },
+                        {
+                          "<": [
+                            "{ /vars/clock/min }",
+                            {
+                              "-": [
+                                "{ /vars/today/toMin }",
+                                "{ /store/fields/lastOrderMinutes/en-US }"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "closed"
+            },
+            "isError": true,
+            "statusCode": 409
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "and": [
+            {
+              "==": [
+                "{ /payload/orderType }",
+                "togo"
+              ]
+            },
+            {
+              "!": [
+                "{ /store/fields/allowTogo/en-US }"
+              ]
+            }
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "togo-disabled"
+            },
+            "isError": true,
+            "statusCode": 400
+          }
+        ]
+      },
+      {
+        "type": "SetVar",
+        "var": "acc",
+        "value": {
+          "lines": [],
+          "total": 0,
+          "opt": 0,
+          "qty": 0,
+          "summary": ""
+        }
+      },
+      {
+        "type": "Loop",
+        "name": "ln",
+        "over": "{ /payload/lines }",
+        "maxIterations": 20,
+        "body": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "mi",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "{ /ln/itemId }"
+                  }
+                },
+                "from": "Published"
+              }
+            ],
+            "catch": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "unavailable",
+                  "itemId": "{ /ln/itemId }"
+                },
+                "isError": true,
+                "statusCode": 409
+              }
+            ]
+          },
+          {
+            "type": "If",
+            "condition": {
+              "or": [
+                {
+                  "!=": [
+                    "{ /mi/sys/contentType/sys/id }",
+                    "__CT_ITEM__"
+                  ]
+                },
+                {
+                  "==": [
+                    "{ /mi/fields/soldOut/en-US }",
+                    true
+                  ]
+                }
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "unavailable",
+                  "itemId": "{ /ln/itemId }",
+                  "name": "{ /mi/fields/name/en-US }"
+                },
+                "isError": true,
+                "statusCode": 409
+              }
+            ]
+          },
+          {
+            "type": "SetVar",
+            "var": "cur",
+            "value": {
+              "unit": "{ /mi/fields/price/en-US }",
+              "text": "",
+              "n": 0,
+              "keys": []
+            }
+          },
+          {
+            "type": "If",
+            "condition": {
+              "!!": [
+                "{ /mi/fields/optionGroups/en-US }"
+              ]
+            },
+            "then": [
+              {
+                "type": "Loop",
+                "name": "g",
+                "over": "{ /mi/fields/optionGroups/en-US }",
+                "maxIterations": 10,
+                "body": [
+                  {
+                    "type": "SetVar",
+                    "var": "cur",
+                    "value": {
+                      "unit": "{ /vars/cur/unit }",
+                      "text": "{ /vars/cur/text }",
+                      "n": 0,
+                      "keys": "{ /vars/cur/keys }"
+                    }
+                  },
+                  {
+                    "type": "Loop",
+                    "name": "op",
+                    "over": "{ /g/options }",
+                    "maxIterations": 20,
+                    "body": [
+                      {
+                        "type": "If",
+                        "condition": {
+                          "in": [
+                            {
+                              "cat": [
+                                "{ /g/id }",
+                                ":",
+                                "{ /op/id }"
+                              ]
+                            },
+                            "{ /ln/options }"
+                          ]
+                        },
+                        "then": [
+                          {
+                            "type": "SetVar",
+                            "var": "cur",
+                            "value": {
+                              "unit": {
+                                "$+": [
+                                  "{ /vars/cur/unit }",
+                                  "{ /op/price }"
+                                ]
+                              },
+                              "text": {
+                                "$if": [
+                                  {
+                                    "$==": [
+                                      "{ /vars/cur/text }",
+                                      ""
+                                    ]
+                                  },
+                                  "{ /op/name/en-US }",
+                                  {
+                                    "$cat": [
+                                      "{ /vars/cur/text }",
+                                      " · ",
+                                      "{ /op/name/en-US }"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "n": {
+                                "$+": [
+                                  "{ /vars/cur/n }",
+                                  1
+                                ]
+                              },
+                              "keys": {
+                                "$merge": [
+                                  "{ /vars/cur/keys }",
+                                  {
+                                    "$cat": [
+                                      "{ /g/id }",
+                                      ":",
+                                      "{ /op/id }"
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "If",
+                    "condition": {
+                      "and": [
+                        "{ /g/required }",
+                        {
+                          "==": [
+                            "{ /vars/cur/n }",
+                            0
+                          ]
+                        }
+                      ]
+                    },
+                    "then": [
+                      {
+                        "type": "Return",
+                        "value": {
+                          "ok": false,
+                          "error": "option-required",
+                          "itemId": "{ /mi/sys/id }",
+                          "name": "{ /mi/fields/name/en-US }",
+                          "groupId": "{ /g/id }",
+                          "group": "{ /g/name/en-US }"
+                        },
+                        "isError": true,
+                        "statusCode": 400
+                      }
+                    ]
+                  },
+                  {
+                    "type": "If",
+                    "condition": {
+                      "and": [
+                        {
+                          "!": [
+                            "{ /g/multi }"
+                          ]
+                        },
+                        {
+                          ">": [
+                            "{ /vars/cur/n }",
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    "then": [
+                      {
+                        "type": "Return",
+                        "value": {
+                          "ok": false,
+                          "error": "option-single",
+                          "itemId": "{ /mi/sys/id }",
+                          "name": "{ /mi/fields/name/en-US }",
+                          "groupId": "{ /g/id }",
+                          "group": "{ /g/name/en-US }"
+                        },
+                        "isError": true,
+                        "statusCode": 400
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SetVar",
+            "var": "line",
+            "value": {
+              "itemId": "{ /mi/sys/id }",
+              "name": "{ /mi/fields/name/en-US }",
+              "sectionId": "{ /mi/fields/section/en-US/sys/id }",
+              "qty": "{ /ln/qty }",
+              "basePrice": "{ /mi/fields/price/en-US }",
+              "unitPrice": "{ /vars/cur/unit }",
+              "options": "{ /vars/cur/text }",
+              "optionKeys": "{ /vars/cur/keys }",
+              "lineTotal": {
+                "$*": [
+                  "{ /vars/cur/unit }",
+                  "{ /ln/qty }"
+                ]
+              }
+            }
+          },
+          {
+            "type": "SetVar",
+            "var": "acc",
+            "value": {
+              "lines": {
+                "$merge": [
+                  "{ /vars/acc/lines }",
+                  "{ /vars/line }"
+                ]
+              },
+              "total": {
+                "$+": [
+                  "{ /vars/acc/total }",
+                  "{ /vars/line/lineTotal }"
+                ]
+              },
+              "opt": {
+                "$+": [
+                  "{ /vars/acc/opt }",
+                  {
+                    "$*": [
+                      {
+                        "$-": [
+                          "{ /vars/cur/unit }",
+                          "{ /mi/fields/price/en-US }"
+                        ]
+                      },
+                      "{ /ln/qty }"
+                    ]
+                  }
+                ]
+              },
+              "qty": {
+                "$+": [
+                  "{ /vars/acc/qty }",
+                  "{ /ln/qty }"
+                ]
+              },
+              "summary": {
+                "$if": [
+                  {
+                    "$==": [
+                      "{ /vars/acc/summary }",
+                      ""
+                    ]
+                  },
+                  {
+                    "$cat": [
+                      "{ /vars/line/name }",
+                      {
+                        "$if": [
+                          {
+                            "$==": [
+                              "{ /vars/line/options }",
+                              ""
+                            ]
+                          },
+                          "",
+                          {
+                            "$cat": [
+                              " (",
+                              "{ /vars/line/options }",
+                              ")"
+                            ]
+                          }
+                        ]
+                      },
+                      " × ",
+                      "{ /vars/line/qty }"
+                    ]
+                  },
+                  {
+                    "$cat": [
+                      "{ /vars/acc/summary }",
+                      ", ",
+                      {
+                        "$cat": [
+                          "{ /vars/line/name }",
+                          {
+                            "$if": [
+                              {
+                                "$==": [
+                                  "{ /vars/line/options }",
+                                  ""
+                                ]
+                              },
+                              "",
+                              {
+                                "$cat": [
+                                  " (",
+                                  "{ /vars/line/options }",
+                                  ")"
+                                ]
+                              }
+                            ]
+                          },
+                          " × ",
+                          "{ /vars/line/qty }"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "==": [
+            "{ /store/fields/prepay/en-US }",
+            true
+          ]
+        },
+        "then": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "Regex",
+                "name": "siteOrigin",
+                "mode": "Match",
+                "pattern": "^(https://[A-Za-z0-9.-]+|http://(localhost|127\\.0\\.0\\.1))(:[0-9]{1,5})?$",
+                "value": "{ /headers/origin }"
+              }
+            ],
+            "catch": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "bad-origin"
+                },
+                "isError": true,
+                "statusCode": 400
+              }
+            ]
+          },
+          {
+            "type": "If",
+            "condition": {
+              "!": [
+                "{ /siteOrigin }"
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "bad-origin"
+                },
+                "isError": true,
+                "statusCode": 400
+              }
+            ]
+          },
+          {
+            "type": "ResourceCreate",
+            "name": "pend",
+            "resource": "Content",
+            "contentType": {
+              "sys": {
+                "id": "__CT_ORDER__"
+              }
+            },
+            "fields": {
+              "tableNo": "{ /payload/tableNo }",
+              "orderType": "{ /payload/orderType }",
+              "status": "pending",
+              "payment": "pending",
+              "lines": "{ /vars/acc/lines }",
+              "note": {
+                "$if": [
+                  {
+                    "$and": [
+                      "{ /store/fields/allowNote/en-US }",
+                      "{ /payload/note }"
+                    ]
+                  },
+                  "{ /payload/note }",
+                  ""
+                ]
+              },
+              "total": "{ /vars/acc/total }",
+              "optionTotal": "{ /vars/acc/opt }",
+              "itemCount": "{ /vars/acc/qty }",
+              "businessDay": "{ /vars/clock/day }",
+              "currency": "{ /store/fields/currency/en-US }"
+            },
+            "locale": "en-US",
+            "publish": false,
+            "propagateEvents": true
+          },
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "Http",
+                "name": "chk",
+                "method": "POST",
+                "url": "https://api.stripe.com/v1/checkout/sessions",
+                "headers": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer { /secrets/STRIPE_SECRET_KEY }"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded"
+                  }
+                ],
+                "body": {
+                  "mode": "payment",
+                  "client_reference_id": "{ /pend/sys/id }",
+                  "success_url": "{ /headers/origin }/paid/{ /pend/sys/id }",
+                  "cancel_url": "{ /headers/origin }/cart?pay=cancel&order={ /pend/sys/id }",
+                  "locale": {
+                    "$if": [
+                      "{ /payload/locale }",
+                      "{ /payload/locale }",
+                      "auto"
+                    ]
+                  },
+                  "expires_at": {
+                    "$+": [
+                      "{ /now/seconds }",
+                      3600
+                    ]
+                  },
+                  "allowed_payment_method_types": [
+                    "card"
+                  ],
+                  "metadata": {
+                    "orderId": "{ /pend/sys/id }",
+                    "tableNo": "{ /payload/tableNo }"
+                  },
+                  "line_items": [
+                    {
+                      "quantity": 1,
+                      "price_data": {
+                        "currency": "{ /store/fields/currency/en-US }",
+                        "unit_amount": "{ /vars/acc/total }",
+                        "product_data": {
+                          "name": {
+                            "$cat": [
+                              "{ /store/fields/name/en-US }",
+                              " · ",
+                              {
+                                "$if": [
+                                  {
+                                    "$==": [
+                                      "{ /payload/tableNo }",
+                                      0
+                                    ]
+                                  },
+                                  "Takeout",
+                                  {
+                                    "$cat": [
+                                      "Table ",
+                                      "{ /payload/tableNo }"
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "description": "{ /vars/acc/summary }"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "timeoutMs": 15000,
+                "retry": 0,
+                "ignoreStatusCode": true,
+                "responseType": "Json"
+              }
+            ],
+            "catch": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "payment-unavailable"
+                },
+                "isError": true,
+                "statusCode": 502
+              }
+            ]
+          },
+          {
+            "type": "If",
+            "condition": {
+              ">=": [
+                "{ /chk/status }",
+                400
+              ]
+            },
+            "then": [
+              {
+                "type": "Return",
+                "value": {
+                  "ok": false,
+                  "error": "payment-unavailable",
+                  "reason": "{ /chk/body/error/code }",
+                  "param": "{ /chk/body/error/param }"
+                },
+                "isError": true,
+                "statusCode": 502
+              }
+            ]
+          },
+          {
+            "type": "ResourcePatch",
+            "resource": "Content",
+            "target": {
+              "sys": {
+                "id": "{ /pend/sys/id }"
+              }
+            },
+            "fields": {
+              "stripeSessionId": "{ /chk/body/id }"
+            },
+            "locale": "en-US",
+            "publish": false,
+            "propagateEvents": true
+          },
+          {
+            "type": "Return",
+            "value": {
+              "ok": true,
+              "pay": {
+                "orderId": "{ /pend/sys/id }",
+                "url": "{ /chk/body/url }"
+              }
+            },
+            "isError": false,
+            "statusCode": 200
+          }
+        ]
+      },
+      {
+        "type": "Loop",
+        "name": "attempt",
+        "while": {
+          "!": [
+            "{ /vars/seq }"
+          ]
+        },
+        "maxIterations": 6,
+        "body": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "ctr",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "from": "Current"
+              },
+              {
+                "type": "ResourcePatch",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "__COUNTER_ID__"
+                  }
+                },
+                "fields": {
+                  "day": "{ /vars/clock/day }",
+                  "seq": {
+                    "$if": [
+                      {
+                        "$==": [
+                          "{ /ctr/fields/day/en-US }",
+                          "{ /vars/clock/day }"
+                        ]
+                      },
+                      {
+                        "$+": [
+                          "{ /ctr/fields/seq/en-US }",
+                          1
+                        ]
+                      },
+                      1
+                    ]
+                  }
+                },
+                "locale": "en-US",
+                "version": "{ /ctr/sys/version }",
+                "publish": false
+              },
+              {
+                "type": "SetVar",
+                "var": "seq",
+                "value": {
+                  "$if": [
+                    {
+                      "$==": [
+                        "{ /ctr/fields/day/en-US }",
+                        "{ /vars/clock/day }"
+                      ]
+                    },
+                    {
+                      "$+": [
+                        "{ /ctr/fields/seq/en-US }",
+                        1
+                      ]
+                    },
+                    1
+                  ]
+                }
+              }
+            ],
+            "catch": [
+              {
+                "type": "If",
+                "condition": false,
+                "then": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!": [
+            "{ /vars/seq }"
+          ]
+        },
+        "then": [
+          {
+            "type": "Return",
+            "value": {
+              "ok": false,
+              "error": "busy"
+            },
+            "isError": true,
+            "statusCode": 503
+          }
+        ]
+      },
+      {
+        "type": "ResourceCreate",
+        "name": "order",
+        "resource": "Content",
+        "contentType": {
+          "sys": {
+            "id": "__CT_ORDER__"
+          }
+        },
+        "fields": {
+          "orderNo": {
+            "$cat": [
+              "A-",
+              {
+                "if": [
+                  {
+                    "<": [
+                      "{ /vars/seq }",
+                      10
+                    ]
+                  },
+                  "00",
+                  {
+                    "if": [
+                      {
+                        "<": [
+                          "{ /vars/seq }",
+                          100
+                        ]
+                      },
+                      "0",
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "{ /vars/seq }"
+            ]
+          },
+          "tableNo": "{ /payload/tableNo }",
+          "orderType": "{ /payload/orderType }",
+          "status": "new",
+          "lines": "{ /vars/acc/lines }",
+          "note": {
+            "$if": [
+              {
+                "$and": [
+                  "{ /store/fields/allowNote/en-US }",
+                  "{ /payload/note }"
+                ]
+              },
+              "{ /payload/note }",
+              ""
+            ]
+          },
+          "total": "{ /vars/acc/total }",
+          "optionTotal": "{ /vars/acc/opt }",
+          "itemCount": "{ /vars/acc/qty }",
+          "businessDay": "{ /vars/clock/day }",
+          "currency": "{ /store/fields/currency/en-US }",
+          "payment": "none"
+        },
+        "locale": "en-US",
+        "publish": false,
+        "propagateEvents": true
+      },
+      {
+        "type": "Return",
+        "value": {
+          "ok": true,
+          "order": {
+            "id": "{ /order/sys/id }",
+            "orderNo": "{ /order/fields/orderNo/en-US }",
+            "status": "new",
+            "tableNo": "{ /payload/tableNo }",
+            "orderType": "{ /payload/orderType }",
+            "lines": "{ /vars/acc/lines }",
+            "total": "{ /vars/acc/total }",
+            "note": "{ /order/fields/note/en-US }",
+            "createdAt": "{ /order/sys/createdAt }",
+            "currency": "{ /store/fields/currency/en-US }",
+            "payment": "none"
+          },
+          "prepMinutes": "{ /store/fields/prepMinutes/en-US }"
+        },
+        "isError": false,
+        "statusCode": 200
+      }
+    ],
+    "secrets": [
+      {
+        "key": "STRIPE_SECRET_KEY",
+        "value": "",
+        "description": "Stripe secret key (server-side only)"
+      }
+    ]
+  }
+}

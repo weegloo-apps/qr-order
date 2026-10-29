@@ -1,0 +1,72 @@
+{
+  "id": "__CT_COUNTER__",
+  "name": "Order counter",
+  "description": "Daily order number and new-order / staff-call change counter (Scripts only)",
+  "displayField": "label",
+  "fields": [
+    {
+      "id": "oxx4fd7k9xot",
+      "name": "Name",
+      "apiName": "label",
+      "type": "ShortText",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "size": {
+            "max": 32
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2httaxuo6fcku",
+      "name": "Business day (KST)",
+      "apiName": "day",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 10
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1dvbpwwxv3k8f",
+      "name": "Today's order number",
+      "apiName": "seq",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 0
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2tv4x84fvbabn",
+      "name": "Staff call count",
+      "apiName": "callSeq",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 0
+          }
+        }
+      ],
+      "disabled": false
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "name": "QR customer (menu read + order scripts)",
+  "description": "Customer token: read store/menu/photos; run only place-order, confirm-payment, order-status, staff-call",
+  "contentType": {
+    "Read": {
+      "Allow": [
+        {
+          "self": {
+            "sys": {
+              "id": "__CT_STORE__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__CT_SECTION__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__CT_ITEM__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "content": {
+    "Read": {
+      "Allow": [
+        {
+          "contentType": {
+            "sys": {
+              "id": "__CT_STORE__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        },
+        {
+          "contentType": {
+            "sys": {
+              "id": "__CT_SECTION__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        },
+        {
+          "contentType": {
+            "sys": {
+              "id": "__CT_ITEM__",
+              "type": "Refer",
+              "targetType": "ContentType"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "media": {
+    "Read": {
+      "Allow": []
+    }
+  },
+  "settings": [],
+  "script": {
+    "Execute": {
+      "Allow": [
+        {
+          "self": {
+            "sys": {
+              "id": "__SCRIPT_PLACE_ORDER__",
+              "type": "Refer",
+              "targetType": "Script"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__SCRIPT_CONFIRM_PAYMENT__",
+              "type": "Refer",
+              "targetType": "Script"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__SCRIPT_ORDER_STATUS__",
+              "type": "Refer",
+              "targetType": "Script"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__SCRIPT_STAFF_CALL__",
+              "type": "Refer",
+              "targetType": "Script"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

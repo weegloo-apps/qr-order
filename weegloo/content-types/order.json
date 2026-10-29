@@ -1,0 +1,233 @@
+{
+  "id": "__CT_ORDER__",
+  "name": "Order",
+  "description": "Customer order (written by the place-order Script, which prices it server-side)",
+  "displayField": "orderNo",
+  "fields": [
+    {
+      "id": "281c9af81wpdp",
+      "name": "Order number",
+      "apiName": "orderNo",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 16
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2nlf5g8nryrv4",
+      "name": "Table number (0 = takeout / queue)",
+      "apiName": "tableNo",
+      "type": "Long",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "range": {
+            "min": 0,
+            "max": 999
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1qva3g9jj4cjj",
+      "name": "Order type",
+      "apiName": "orderType",
+      "type": "ShortText",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "in": [
+            "here",
+            "togo"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3345imz3iozuj",
+      "name": "Status",
+      "apiName": "status",
+      "type": "ShortText",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "in": [
+            "pending",
+            "new",
+            "preparing",
+            "done",
+            "rejected"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2zbaqbjpssetf",
+      "name": "Order lines",
+      "apiName": "lines",
+      "type": "Json",
+      "localized": false,
+      "required": true,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "fg6nv7tku7t5",
+      "name": "Request",
+      "apiName": "note",
+      "type": "RichText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 200
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "373nh4rblsxz6",
+      "name": "Total (minor unit)",
+      "apiName": "total",
+      "type": "Long",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "range": {
+            "min": 0
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "zvue7wz0v3d9",
+      "name": "Option extras (minor unit)",
+      "apiName": "optionTotal",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 0
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "zjq2xx067u6g",
+      "name": "Items sold",
+      "apiName": "itemCount",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 0
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1msayj3fo8sxi",
+      "name": "Business day (KST)",
+      "apiName": "businessDay",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 10
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1weddh2x4vnw2",
+      "name": "Currency (ISO 4217, at order time)",
+      "apiName": "currency",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 3
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3sd0kpgh9cy0y",
+      "name": "Payment (none, pending, paid, refunded)",
+      "apiName": "payment",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "in": [
+            "none",
+            "pending",
+            "paid",
+            "refunded"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3v5iytxb5wh22",
+      "name": "Stripe Checkout Session id",
+      "apiName": "stripeSessionId",
+      "type": "RichText",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "297lsrxt8j25h",
+      "name": "Stripe PaymentIntent id",
+      "apiName": "paymentIntentId",
+      "type": "RichText",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "2r2ry3g1zn7i1",
+      "name": "Stripe Refund id",
+      "apiName": "refundId",
+      "type": "RichText",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    }
+  ]
+}

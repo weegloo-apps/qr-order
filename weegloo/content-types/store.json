@@ -1,0 +1,398 @@
+{
+  "id": "__CT_STORE__",
+  "name": "Store settings",
+  "description": "Store info, opening hours, ordering options, table count and brand color (single entry)",
+  "displayField": "name",
+  "fields": [
+    {
+      "id": "ebxd1debwoes",
+      "name": "Store name",
+      "apiName": "name",
+      "type": "ShortText",
+      "localized": true,
+      "required": true,
+      "validations": [
+        {
+          "size": {
+            "min": 1,
+            "max": 64
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "jv2wajnkits7",
+      "name": "Tagline",
+      "apiName": "intro",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 500
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3fo9uv9izertq",
+      "name": "Phone",
+      "apiName": "phone",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 32
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "385a8zlb5tbrg",
+      "name": "Postcode",
+      "apiName": "postcode",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 10
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "25a6e411pzyo6",
+      "name": "Address",
+      "apiName": "address",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 300
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "12f1d50ydl26r",
+      "name": "Address details",
+      "apiName": "addressDetail",
+      "type": "ShortText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 64
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "22bc375axwcwq",
+      "name": "Wi-Fi name",
+      "apiName": "wifiName",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 64
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1j05zydkqbxcn",
+      "name": "Wi-Fi password",
+      "apiName": "wifiPassword",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 64
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1fwg0jyixe7jr",
+      "name": "Social account",
+      "apiName": "sns",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 64
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "jolxxbp1lk3j",
+      "name": "Opening hours",
+      "apiName": "hours",
+      "type": "Json",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "1b4vbr7qj3exe",
+      "name": "Take QR orders",
+      "apiName": "acceptOrders",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "3eged197dac0y",
+      "name": "Allow takeout",
+      "apiName": "allowTogo",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "1kg9r90ew3tkb",
+      "name": "Allow order requests",
+      "apiName": "allowNote",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "25u2z8z5xznfd",
+      "name": "Staff call button",
+      "apiName": "allowStaffCall",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "zltp30n80ryc",
+      "name": "New order sound",
+      "apiName": "soundAlert",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "1gqfyeoobvn7o",
+      "name": "Last order (minutes before closing)",
+      "apiName": "lastOrderMinutes",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "in": [
+            0,
+            15,
+            30
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3c052515ycqlb",
+      "name": "Estimated prep time (min)",
+      "apiName": "prepMinutes",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 1,
+            "max": 180
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3669stvm1h32g",
+      "name": "Payment note",
+      "apiName": "payNotice",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 300
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "mgn0ahe6sq7o",
+      "name": "Payment methods",
+      "apiName": "paymentMethods",
+      "type": "Array",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false,
+      "items": {
+        "type": "ShortText",
+        "validations": [
+          {
+            "in": [
+              "card",
+              "cash",
+              "easy",
+              "transfer"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "23b8cfznnazum",
+      "name": "Allergens & origin",
+      "apiName": "allergyInfo",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 3000
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3og5nrx95buyo",
+      "name": "Table count",
+      "apiName": "tableCount",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": 1,
+            "max": 40
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "bzjyti3ghbos",
+      "name": "Brand color",
+      "apiName": "brandColor",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "in": [
+            "#C2410C",
+            "#1D4ED8",
+            "#15803D",
+            "#111111"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "5a6v2z7x6kc7",
+      "name": "Country / region (ISO 3166 code)",
+      "apiName": "country",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "regexp": {
+            "pattern": "^[A-Z]{2}$"
+          },
+          "message": "Use a two-letter ISO country code, e.g. KR or US."
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "dzqvzyisebky",
+      "name": "Currency (ISO 4217 code)",
+      "apiName": "currency",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "in": [
+            "KRW",
+            "USD",
+            "EUR",
+            "JPY",
+            "GBP",
+            "CNY",
+            "TWD",
+            "HKD",
+            "SGD",
+            "THB",
+            "VND",
+            "PHP",
+            "IDR",
+            "MYR",
+            "AUD",
+            "NZD",
+            "CAD"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "3759w71tpsihf",
+      "name": "Pay when ordering (card, Stripe)",
+      "apiName": "prepay",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "__CT_SECTION__",
+  "name": "Menu section",
+  "description": "Menu category (e.g. coffee, non-coffee, dessert)",
+  "displayField": "name",
+  "fields": [
+    {
+      "id": "316lnf9orwijd",
+      "name": "Section name",
+      "apiName": "name",
+      "type": "ShortText",
+      "localized": true,
+      "required": true,
+      "validations": [
+        {
+          "size": {
+            "min": 1,
+            "max": 32
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "12n27hzjbw1gf",
+      "name": "Sort order",
+      "apiName": "sortOrder",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    }
+  ]
+}

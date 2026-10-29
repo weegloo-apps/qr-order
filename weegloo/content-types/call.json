@@ -1,0 +1,82 @@
+{
+  "id": "__CT_CALL__",
+  "name": "Staff call",
+  "description": "Staff call request from the customer screen",
+  "displayField": "tableLabel",
+  "fields": [
+    {
+      "id": "18h684rc2hts9",
+      "name": "Seat",
+      "apiName": "tableLabel",
+      "type": "ShortText",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "size": {
+            "max": 32
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2403eq6oher6",
+      "name": "Table number (0 = takeout / queue)",
+      "apiName": "tableNo",
+      "type": "Long",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "range": {
+            "min": 0,
+            "max": 999
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "26nnz8x4srrvo",
+      "name": "Requests",
+      "apiName": "requests",
+      "type": "Array",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false,
+      "items": {
+        "type": "ShortText",
+        "validations": [
+          {
+            "in": [
+              "water",
+              "napkin",
+              "cutlery",
+              "other"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "379dzt4h0zj1j",
+      "name": "Status",
+      "apiName": "status",
+      "type": "ShortText",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "in": [
+            "open",
+            "done",
+            "cancelled"
+          ]
+        }
+      ],
+      "disabled": false
+    }
+  ]
+}

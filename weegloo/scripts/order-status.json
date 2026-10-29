@@ -1,0 +1,170 @@
+{
+  "name": "order-status",
+  "directCallEnabled": true,
+  "anonymousCallEnabled": false,
+  "definition": {
+    "method": "Post",
+    "payloadSchema": {
+      "type": "object",
+      "required": [
+        "ids"
+      ],
+      "properties": {
+        "ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+          }
+        },
+        "callId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      }
+    },
+    "statements": [
+      {
+        "type": "SetVar",
+        "var": "out",
+        "value": []
+      },
+      {
+        "type": "Loop",
+        "name": "oid",
+        "over": "{ /payload/ids }",
+        "maxIterations": 10,
+        "body": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "o",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "{ /oid }"
+                  }
+                },
+                "from": "Current"
+              },
+              {
+                "type": "If",
+                "condition": {
+                  "==": [
+                    "{ /o/sys/contentType/sys/id }",
+                    "__CT_ORDER__"
+                  ]
+                },
+                "then": [
+                  {
+                    "type": "SetVar",
+                    "var": "row",
+                    "value": {
+                      "id": "{ /o/sys/id }",
+                      "orderNo": "{ /o/fields/orderNo/en-US }",
+                      "status": "{ /o/fields/status/en-US }",
+                      "tableNo": "{ /o/fields/tableNo/en-US }",
+                      "orderType": "{ /o/fields/orderType/en-US }",
+                      "lines": "{ /o/fields/lines/en-US }",
+                      "total": "{ /o/fields/total/en-US }",
+                      "note": "{ /o/fields/note/en-US }",
+                      "currency": "{ /o/fields/currency/en-US }",
+                      "payment": "{ /o/fields/payment/en-US }",
+                      "createdAt": "{ /o/sys/createdAt }",
+                      "updatedAt": "{ /o/sys/updatedAt }"
+                    }
+                  },
+                  {
+                    "type": "SetVar",
+                    "var": "out",
+                    "value": {
+                      "$merge": [
+                        "{ /vars/out }",
+                        "{ /vars/row }"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "catch": [
+              {
+                "type": "SetVar",
+                "var": "row"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "If",
+        "condition": {
+          "!!": [
+            "{ /payload/callId }"
+          ]
+        },
+        "then": [
+          {
+            "type": "Try",
+            "body": [
+              {
+                "type": "ResourceRead",
+                "name": "c",
+                "resource": "Content",
+                "target": {
+                  "sys": {
+                    "id": "{ /payload/callId }"
+                  }
+                },
+                "from": "Current"
+              },
+              {
+                "type": "If",
+                "condition": {
+                  "==": [
+                    "{ /c/sys/contentType/sys/id }",
+                    "__CT_CALL__"
+                  ]
+                },
+                "then": [
+                  {
+                    "type": "SetVar",
+                    "var": "call",
+                    "value": {
+                      "id": "{ /c/sys/id }",
+                      "status": "{ /c/fields/status/en-US }"
+                    }
+                  }
+                ]
+              }
+            ],
+            "catch": [
+              {
+                "type": "SetVar",
+                "var": "call",
+                "value": {
+                  "id": "{ /payload/callId }",
+                  "status": "gone"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Return",
+        "value": {
+          "ok": true,
+          "orders": "{ /vars/out }",
+          "call": "{ /vars/call }"
+        },
+        "isError": false,
+        "statusCode": 200
+      }
+    ]
+  }
+}

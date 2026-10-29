@@ -1,0 +1,163 @@
+{
+  "id": "__CT_ITEM__",
+  "name": "Menu item",
+  "description": "Menu item (price, badge, sold out, option groups)",
+  "displayField": "name",
+  "fields": [
+    {
+      "id": "38ub2vn3cnm0d",
+      "name": "Name",
+      "apiName": "name",
+      "type": "ShortText",
+      "localized": true,
+      "required": true,
+      "validations": [
+        {
+          "size": {
+            "min": 1,
+            "max": 40
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "o1iwazrfkcg7",
+      "name": "Description (one line)",
+      "apiName": "description",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 200
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2jc8u4src61ct",
+      "name": "Details",
+      "apiName": "detail",
+      "type": "RichText",
+      "localized": true,
+      "required": false,
+      "validations": [
+        {
+          "size": {
+            "max": 1000
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "2y9wvydh5ift3",
+      "name": "Price (minor unit of the store currency)",
+      "apiName": "price",
+      "type": "Long",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "range": {
+            "min": 0,
+            "max": 1000000000
+          }
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "1hqfpc5lf4jx7",
+      "name": "Section",
+      "apiName": "section",
+      "type": "Refer",
+      "localized": false,
+      "required": true,
+      "validations": [
+        {
+          "referContentType": [
+            {
+              "sys": {
+                "id": "__CT_SECTION__",
+                "type": "Refer",
+                "targetType": "ContentType"
+              }
+            }
+          ]
+        }
+      ],
+      "disabled": false,
+      "targetType": "Content"
+    },
+    {
+      "id": "1bx8sjk50wdzu",
+      "name": "Badge",
+      "apiName": "badge",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "in": [
+            "",
+            "popular",
+            "new"
+          ]
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "biurvi4tow6c",
+      "name": "Sold out",
+      "apiName": "soldOut",
+      "type": "Boolean",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "3ryqfsvq2yews",
+      "name": "Sort order",
+      "apiName": "sortOrder",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "22nkcytk6nvtn",
+      "name": "Option groups",
+      "apiName": "optionGroups",
+      "type": "Json",
+      "localized": false,
+      "required": false,
+      "validations": [],
+      "disabled": false
+    },
+    {
+      "id": "36mqnk1jcmb6q",
+      "name": "Photo",
+      "apiName": "image",
+      "type": "Refer",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "mediaMimetypeGroup": [
+            "Image"
+          ],
+          "message": "Choose an image file."
+        }
+      ],
+      "disabled": false,
+      "targetType": "Media"
+    }
+  ]
+}
