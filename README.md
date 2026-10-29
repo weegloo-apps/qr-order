@@ -1,6 +1,6 @@
 # Small Table · QR Table Ordering — source code
 
-[한국어](README.md)
+[한국어](README.ko.md)
 
 Source code of the Weegloo Marketplace app **Small Table QR Order**. It is public so that a shop that installed the
 app can switch card payments to its own payment provider (PG) or change the screens.
@@ -147,7 +147,7 @@ go-live checklist. To catch guests who close the page right after paying, add a 
 
 ## Good to know
 
-- **Time zone**: opening hours, last order, daily sales and order numbers follow Korea time (UTC+9). That is the `32400000` (9 hours) in the Scripts and the order's `businessDay`.
+- **Time zone**: times are stored in UTC, and the screens show them in the store's time zone. The first time the admin screen opens, it saves that device's time zone (`store.timeZone`, e.g. `Asia/Seoul`) and its current UTC offset in minutes (`store.utcOffsetMin`). The zone stays put after that; the offset is refreshed whenever the admin screen opens after a daylight saving change. Scripts cannot convert time zones, so `place-order` and `confirm-payment` use `utcOffsetMin` for opening hours, last order and the day an order is counted in (`businessDay`, order numbers from `A-001`). Until a store has the value, they use Korea time (`32400000`, 9 hours). If you installed before October 29, 2026, your Space has neither the two store fields nor this logic and stays on Korea time: add the fields from `weegloo/content-types/store.json` and replace the `32400000` in the two Scripts as in `weegloo/scripts/`.
 - **Default locale**: the Scripts read and write language-neutral values under `en-US` and assume it is the Space's default locale.
 - **Screen text**: the English and Korean dictionaries in `site/js/i18n.js`. The language list follows the Space's Locales.
 - **Usage**: while a guest is watching an order, the guest screen calls `order-status` every 10 seconds (for up to 1 hour), which counts toward Weegloo Script runs.

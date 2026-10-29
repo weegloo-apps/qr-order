@@ -1,6 +1,6 @@
 import { onLeave } from '/js/main.js';
 import { t } from '/js/i18n.js';
-import { DAY, ago, dateLabel, h, icon, kstMidnight, tableLabel, toast, typeLabel, money, fill } from '/js/util.js';
+import { DAY, ago, dateLabel, h, icon, storeMidnight, tableLabel, toast, typeLabel, money, fill } from '/js/util.js';
 import { closeCall, fetchOpenCalls, fetchOrders, lineName, lineOptions, loadMenu, refundOrder, rejectOrder, setOrderStatus, setSound, soundOn, unlockAudio, watcher } from '/js/admin/data.js';
 
 let filter = 'all';
@@ -25,7 +25,7 @@ export async function ordersPage(main, { isCurrent }) {
   }
 
   function paint() {
-    const today = kstMidnight();
+    const today = storeMidnight();
     const visible = orders.filter((o) => filter === 'all' || o.orderType === filter);
     const closed = (o) => o.status === 'done' || o.status === 'rejected';
     const shown = visible.filter((o) => !closed(o) || o.createdAt >= today);

@@ -141,37 +141,55 @@ export function loadScript(src) {
   });
 }
 
-// ---------- Time (the store runs on Korea Standard Time, UTC+9, no DST) ----------
-const KST = 9 * 3600e3;
+// ---------- Time ----------
+// Times are stored in UTC and shown in the store's time zone (store.timeZone, an IANA name the admin
+// screen saves; see admin/data.js syncTimeZone). A store without one is in Korea, the original default.
+export const DEFAULT_TIME_ZONE = 'Asia/Seoul';
 export const DAY = 86400e3;
+let zone = DEFAULT_TIME_ZONE;
+const partsFmt = new Map();
+const WEEKDAY = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+export const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIME_ZONE;
+export const validTimeZone = (tz) => { try { return !!tz && !!new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch { return false; } };
+export function setTimeZone(tz) { zone = validTimeZone(tz) ? tz : DEFAULT_TIME_ZONE; }
 
 // Weekday names in the UI language (dow 0 = Sunday; 2023-01-01 was a Sunday).
 export const dayShort = (dow) => new Intl.DateTimeFormat(uiTag(), { weekday: 'short', timeZone: 'UTC' }).format(Date.UTC(2023, 0, 1 + dow));
 export const dayLong = (dow) => new Intl.DateTimeFormat(uiTag(), { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2023, 0, 1 + dow));
 
-export function kst(ms = Date.now()) {
-  const d = new Date(ms + KST);
-  return {
-    y: d.getUTCFullYear(),
-    mo: d.getUTCMonth(),
-    d: d.getUTCDate(),
-    dow: d.getUTCDay(),
-    hh: d.getUTCHours(),
-    mi: d.getUTCMinutes(),
-    min: d.getUTCHours() * 60 + d.getUTCMinutes(),
-  };
+// The wall-clock date and time at `ms` in a time zone (the store's by default).
+export function storeTime(ms = Date.now(), tz = zone) {
+  if (!partsFmt.has(tz)) {
+    partsFmt.set(tz, new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short', hour: 'numeric', minute: 'numeric',
+    }));
+  }
+  const p = {};
+  for (const { type, value } of partsFmt.get(tz).formatToParts(ms)) p[type] = value;
+  const hh = Number(p.hour) % 24;
+  const mi = Number(p.minute);
+  return { y: Number(p.year), mo: Number(p.month) - 1, d: Number(p.day), dow: WEEKDAY[p.weekday], hh, mi, min: hh * 60 + mi };
 }
 
-// Epoch ms of KST midnight, `offset` days from the day containing `ms`.
-export function kstMidnight(ms = Date.now(), offset = 0) {
-  const p = kst(ms);
-  return Date.UTC(p.y, p.mo, p.d + offset) - KST;
+// The zone's offset from UTC at `ms`, in minutes (540 for Korea; changes with daylight saving time).
+export function zoneOffsetMin(ms = Date.now(), tz = zone) {
+  const p = storeTime(ms, tz);
+  return Math.round((Date.UTC(p.y, p.mo, p.d, p.hh, p.mi) - Math.floor(ms / 60e3) * 60e3) / 60e3);
+}
+
+// Epoch ms of the store's midnight, `offset` days from the day containing `ms`. Step from day to day
+// with this rather than by adding DAY: a day with a daylight saving change is 23 or 25 hours long.
+export function storeMidnight(ms = Date.now(), offset = 0) {
+  const p = storeTime(ms);
+  const wall = Date.UTC(p.y, p.mo, p.d + offset);
+  return wall - zoneOffsetMin(wall - zoneOffsetMin(wall) * 60e3) * 60e3;
 }
 
 export const toMs = (iso) => new Date(iso).getTime();
-export const hm = (ms) => { const p = kst(ms); return `${pad(p.hh)}:${pad(p.mi)}`; };
-export const dateLabel = (ms) => new Intl.DateTimeFormat(uiTag(), { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'Asia/Seoul' }).format(ms);
-export const md = (ms) => { const p = kst(ms); return `${p.mo + 1}/${p.d}`; };
+export const hm = (ms) => { const p = storeTime(ms); return `${pad(p.hh)}:${pad(p.mi)}`; };
+export const dateLabel = (ms) => new Intl.DateTimeFormat(uiTag(), { month: 'long', day: 'numeric', weekday: 'long', timeZone: zone }).format(ms);
+export const md = (ms) => { const p = storeTime(ms); return `${p.mo + 1}/${p.d}`; };
 export const minToHM = (min) => `${pad(Math.floor(((min % 1440) + 1440) % 1440 / 60))}:${pad(((min % 60) + 60) % 60)}`;
 export function hmToMin(s) {
   const [a, b] = String(s || '').split(':').map(Number);

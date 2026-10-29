@@ -1,7 +1,7 @@
 import { CONFIG } from '/js/config.js';
 import { admin, adminAuth, imageIds, mediaUrl, runScript, val } from '/js/api.js';
 import { defaultLocale, isBucket, lbl, t } from '/js/i18n.js';
-import { DAY, ls, setCurrency } from '/js/util.js';
+import { DAY, deviceTimeZone, ls, setCurrency, setTimeZone, validTimeZone, zoneOffsetMin } from '/js/util.js';
 import { normHours, serializeHours } from '/js/hours.js';
 
 const CT = CONFIG.contentTypes;
@@ -31,6 +31,7 @@ export async function loadStore(force = false) {
   try {
     adminData.store = await admin.get(CT.store, CONFIG.storeId);
     setCurrency(storeVal('currency'));
+    setTimeZone(storeVal('timeZone'));
   } catch (e) {
     if (e.status !== 404) throw e;
     // The ordering Scripts read this exact row; if it was deleted the app cannot recover its id,
@@ -56,8 +57,21 @@ export const storeMap = (k) => toLocaleMap(adminData.store?.fields?.[k]);
 export async function saveStore(values) {
   adminData.store = await admin.patchPublish(CT.store, adminData.store, values);
   setCurrency(storeVal('currency'));
+  setTimeZone(storeVal('timeZone'));
   window.dispatchEvent(new Event('qr:store'));
   return adminData.store;
+}
+
+// The ordering Scripts cannot convert time zones, so the store keeps its zone's current UTC offset
+// (utcOffsetMin) next to the zone itself; the Scripts use it for opening hours and the day an order
+// is counted in. The zone is this device's the first time, then stays put (an owner travelling with a
+// laptop does not move the store); the offset is refreshed whenever daylight saving time changes it.
+export async function syncTimeZone() {
+  const stored = storeVal('timeZone');
+  const tz = validTimeZone(stored) ? stored : deviceTimeZone();
+  const offset = zoneOffsetMin(Date.now(), tz);
+  if (tz === stored && storeVal('utcOffsetMin') === offset) return;
+  await saveStore({ timeZone: tz, utcOffsetMin: offset });
 }
 
 // ---------- Menu (management copy, drafts included) ----------

@@ -1,6 +1,6 @@
 import { onLeave } from '/js/main.js';
 import { t } from '/js/i18n.js';
-import { DAY, dayLong, dayShort, getCurrency, h, icon, kst, kstMidnight, md, money, num, pct, toMajor, fill } from '/js/util.js';
+import { DAY, dayLong, dayShort, getCurrency, h, icon, storeTime, storeMidnight, md, money, num, pct, toMajor, fill } from '/js/util.js';
 import { WEEK_ORDER, normHours } from '/js/hours.js';
 import { byItem, csv, download, lossNote, totals } from '/js/admin/analytics.js';
 import { adminData, lineName, loadMenu, ordersCached, storeVal, watcher } from '/js/admin/data.js';
@@ -22,8 +22,8 @@ export async function salesPage(main, { isCurrent }) {
   async function load() {
     const conf = RANGES[rangeKey];
     const now = Date.now();
-    const from = kstMidnight(now, -(conf.days - 1));
-    r = { from, to: now + 60e3, prevFrom: from - conf.days * DAY, prevTo: now - conf.days * DAY };
+    const from = storeMidnight(now, -(conf.days - 1));
+    r = { from, to: now + 60e3, prevFrom: storeMidnight(now, -(2 * conf.days - 1)), prevTo: now - conf.days * DAY };
     const [list] = await Promise.all([ordersCached(`sales:${rangeKey}:${Math.floor(from / DAY)}`, r.prevFrom, r.to), loadMenu()]);
     orders = list;
   }
@@ -33,17 +33,19 @@ export async function salesPage(main, { isCurrent }) {
     const rows = [];
     if (rangeKey === 'week') {
       for (let i = conf.days - 1; i >= 0; i--) {
-        const s = r.from + i * DAY;
-        const list = cur.filter((o) => o.createdAt >= s && o.createdAt < s + DAY);
+        const s = storeMidnight(r.from, i);
+        const e = storeMidnight(r.from, i + 1);
+        const list = cur.filter((o) => o.createdAt >= s && o.createdAt < e);
         const tt = totals(list);
-        const closed = !tt.received && !hours[kst(s).dow].open;
-        rows.push({ label: `${md(s)} (${dayShort(kst(s).dow)})`, ...tt, closed });
+        const closed = !tt.received && !hours[storeTime(s).dow].open;
+        rows.push({ label: `${md(s)} (${dayShort(storeTime(s).dow)})`, ...tt, closed });
       }
     } else {
       for (let w = 3; w >= 0; w--) {
-        const s = r.from + w * 7 * DAY;
-        const list = cur.filter((o) => o.createdAt >= s && o.createdAt < s + 7 * DAY);
-        rows.push({ label: `${md(s)} – ${md(s + 6 * DAY)}`, ...totals(list), closed: false });
+        const s = storeMidnight(r.from, w * 7);
+        const e = storeMidnight(r.from, w * 7 + 7);
+        const list = cur.filter((o) => o.createdAt >= s && o.createdAt < e);
+        rows.push({ label: `${md(s)} – ${md(storeMidnight(r.from, w * 7 + 6))}`, ...totals(list), closed: false });
       }
     }
     return rows;
@@ -75,13 +77,13 @@ export async function salesPage(main, { isCurrent }) {
     const openHours = hours.filter((x) => x.open);
     let lo = openHours.length ? Math.min(...openHours.map((x) => Math.floor(x.fromMin / 60))) : 10;
     let hi = openHours.length ? Math.max(...openHours.map((x) => (x.toMin > x.fromMin ? Math.ceil(x.toMin / 60) - 1 : 23))) : 21;
-    for (const o of cur) { const hh = kst(o.createdAt).hh; lo = Math.min(lo, hh); hi = Math.max(hi, hh); }
+    for (const o of cur) { const hh = storeTime(o.createdAt).hh; lo = Math.min(lo, hh); hi = Math.max(hi, hh); }
     const hoursCols = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
     const dayCount = Array(7).fill(0);
-    for (let s = r.from; s < r.to; s += DAY) dayCount[kst(s).dow] += 1;
+    for (let i = 0, s = r.from; s < r.to; s = storeMidnight(r.from, ++i)) dayCount[storeTime(s).dow] += 1;
     const grid = {};
     // Demand, so every order received counts here — declined ones included.
-    for (const o of cur) { const p = kst(o.createdAt); grid[`${p.dow}-${p.hh}`] = (grid[`${p.dow}-${p.hh}`] || 0) + 1; }
+    for (const o of cur) { const p = storeTime(o.createdAt); grid[`${p.dow}-${p.hh}`] = (grid[`${p.dow}-${p.hh}`] || 0) + 1; }
     let peak = null;
     let peakV = 0;
     for (const [k, v] of Object.entries(grid)) {

@@ -4,7 +4,7 @@ import { navigate, render } from '/js/main.js';
 import { t } from '/js/i18n.js';
 import { langSwitcher } from '/js/lang-ui.js';
 import { h, icon, poweredBy, tableLabel, toast } from '/js/util.js';
-import { adminData, alertLength, audioReady, chime, fetchOpenCalls, hush, loadStore, saveStore, soundOn, storeVal, unlockAudio, watcher } from '/js/admin/data.js';
+import { adminData, alertLength, audioReady, chime, fetchOpenCalls, hush, loadStore, saveStore, soundOn, storeVal, syncTimeZone, unlockAudio, watcher } from '/js/admin/data.js';
 import { dashboardPage } from '/js/admin/dashboard.js';
 import { ordersPage } from '/js/admin/orders.js';
 import { menuPage } from '/js/admin/menu.js';
@@ -38,6 +38,7 @@ export async function renderAdmin(app, path, isCurrent) {
   }
   try {
     await loadStore();
+    syncTimeZone().catch((e) => console.warn('Could not save the store time zone', e));
   } catch (e) {
     if (!isCurrent()) return;
     if (e.status === 401) { verifiedToken = null; render(); return; }

@@ -1,6 +1,6 @@
 import { onLeave } from '/js/main.js';
 import { t } from '/js/i18n.js';
-import { DAY, dateLabel, dayShort, getCurrency, h, hm, kst, kstMidnight, md, money, moneyCompact, num, pct, tableLabel, toast, fill } from '/js/util.js';
+import { DAY, dateLabel, dayShort, getCurrency, h, hm, storeTime, storeMidnight, md, money, moneyCompact, num, pct, tableLabel, toast, fill } from '/js/util.js';
 import { normHours } from '/js/hours.js';
 import { byItem, lossNote, totals } from '/js/admin/analytics.js';
 import { lineName, loadMenu, ordersCached, setOrderStatus, storeVal, watcher } from '/js/admin/data.js';
@@ -16,7 +16,7 @@ const PERIODS = {
 
 function range(p, now = Date.now()) {
   const conf = PERIODS[p];
-  const from = kstMidnight(now, -conf.start);
+  const from = storeMidnight(now, -conf.start);
   return { from, to: now + 60e3, prevFrom: from - conf.span, prevTo: now - conf.span };
 }
 
@@ -35,23 +35,25 @@ export async function dashboardPage(main, { isCurrent }) {
   function bars(cur, r) {
     const list = cur.filter((o) => o.status !== 'rejected' && o.payment !== 'refunded');
     if (period === 'today') {
-      const td = normHours(storeVal('hours'))[kst().dow];
+      const td = normHours(storeVal('hours'))[storeTime().dow];
       let lo = td.open ? Math.floor(td.fromMin / 60) : 9;
       let hi = td.open ? Math.max(lo, Math.ceil(td.toMin / 60) - 1) : 21;
-      for (const o of list) { const hh = kst(o.createdAt).hh; lo = Math.min(lo, hh); hi = Math.max(hi, hh); }
+      for (const o of list) { const hh = storeTime(o.createdAt).hh; lo = Math.min(lo, hh); hi = Math.max(hi, hh); }
       const out = [];
-      for (let hh = lo; hh <= hi; hh++) out.push({ label: t('d.hour', { h: hh }), v: list.filter((o) => kst(o.createdAt).hh === hh).reduce((a, o) => a + o.total, 0) });
+      for (let hh = lo; hh <= hi; hh++) out.push({ label: t('d.hour', { h: hh }), v: list.filter((o) => storeTime(o.createdAt).hh === hh).reduce((a, o) => a + o.total, 0) });
       return out;
     }
     if (period === 'week') {
       return Array.from({ length: 7 }, (_, i) => {
-        const s = r.from + i * DAY;
-        return { label: dayShort(kst(s).dow), tip: md(s), v: list.filter((o) => o.createdAt >= s && o.createdAt < s + DAY).reduce((a, o) => a + o.total, 0) };
+        const s = storeMidnight(r.from, i);
+        const e = storeMidnight(r.from, i + 1);
+        return { label: dayShort(storeTime(s).dow), tip: md(s), v: list.filter((o) => o.createdAt >= s && o.createdAt < e).reduce((a, o) => a + o.total, 0) };
       });
     }
     return Array.from({ length: 4 }, (_, i) => {
-      const s = r.from + i * 7 * DAY;
-      return { label: t('d.weekOf', { date: md(s) }), v: list.filter((o) => o.createdAt >= s && o.createdAt < s + 7 * DAY).reduce((a, o) => a + o.total, 0) };
+      const s = storeMidnight(r.from, i * 7);
+      const e = storeMidnight(r.from, i * 7 + 7);
+      return { label: t('d.weekOf', { date: md(s) }), v: list.filter((o) => o.createdAt >= s && o.createdAt < e).reduce((a, o) => a + o.total, 0) };
     });
   }
 
@@ -73,7 +75,7 @@ export async function dashboardPage(main, { isCurrent }) {
     const peak = max > 0 ? series.findIndex((x) => x.v === max) : -1;
     const tops = byItem(cur).map((x) => ({ ...x, name: lineName(x) })).sort((x, y) => y.qty - x.qty).slice(0, 5);
     const topMax = tops[0]?.qty || 1;
-    const todayStart = kstMidnight();
+    const todayStart = storeMidnight();
     const todays = orders.filter((o) => o.createdAt >= todayStart).sort((x, y) => y.createdAt - x.createdAt);
     const pending = todays.filter((o) => o.status === 'new' || o.status === 'preparing').length;
 

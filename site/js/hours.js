@@ -1,5 +1,5 @@
 import { t } from '/js/i18n.js';
-import { ampm, dayLong, dayShort, hmToMin, kst, minToHM } from '/js/util.js';
+import { ampm, dayLong, dayShort, hmToMin, storeTime, minToHM } from '/js/util.js';
 
 // Business hours are stored as [{ dow: 0..6 (Sun..Sat), open, from: 'HH:MM', to: 'HH:MM', fromMin, toMin }].
 // The place-order Script applies the same rule server-side, so the two must stay in step.
@@ -30,7 +30,7 @@ function within(min, from, to) {
 const nextLabel = (n) => (n.kind === 'today' ? t('day.today') : n.kind === 'tomorrow' ? t('day.tomorrow') : dayLong(n.dow));
 
 export function storeStatus(store, ms = Date.now()) {
-  const now = kst(ms);
+  const now = storeTime(ms);
   const hours = normHours(store?.hours);
   const today = hours[now.dow];
   const last = Number(store?.lastOrderMinutes) || 0;

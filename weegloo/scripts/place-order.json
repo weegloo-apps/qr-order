@@ -135,7 +135,23 @@
                           {
                             "$+": [
                               "{ /now/millis }",
-                              32400000
+                              {
+                                "$if": [
+                                  {
+                                    "$===": [
+                                      "{ /store/fields/utcOffsetMin/en-US }",
+                                      null
+                                    ]
+                                  },
+                                  32400000,
+                                  {
+                                    "$*": [
+                                      "{ /store/fields/utcOffsetMin/en-US }",
+                                      60000
+                                    ]
+                                  }
+                                ]
+                              }
                             ]
                           },
                           {
@@ -143,7 +159,23 @@
                               {
                                 "$+": [
                                   "{ /now/millis }",
-                                  32400000
+                                  {
+                                    "$if": [
+                                      {
+                                        "$===": [
+                                          "{ /store/fields/utcOffsetMin/en-US }",
+                                          null
+                                        ]
+                                      },
+                                      32400000,
+                                      {
+                                        "$*": [
+                                          "{ /store/fields/utcOffsetMin/en-US }",
+                                          60000
+                                        ]
+                                      }
+                                    ]
+                                  }
                                 ]
                               },
                               86400000
@@ -169,7 +201,23 @@
                       {
                         "$+": [
                           "{ /now/millis }",
-                          32400000
+                          {
+                            "$if": [
+                              {
+                                "$===": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  null
+                                ]
+                              },
+                              32400000,
+                              {
+                                "$*": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  60000
+                                ]
+                              }
+                            ]
+                          }
                         ]
                       },
                       86400000
@@ -180,7 +228,23 @@
                       {
                         "$+": [
                           "{ /now/millis }",
-                          32400000
+                          {
+                            "$if": [
+                              {
+                                "$===": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  null
+                                ]
+                              },
+                              32400000,
+                              {
+                                "$*": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  60000
+                                ]
+                              }
+                            ]
+                          }
                         ]
                       },
                       60000
@@ -196,7 +260,23 @@
               {
                 "$+": [
                   "{ /now/millis }",
-                  32400000
+                  {
+                    "$if": [
+                      {
+                        "$===": [
+                          "{ /store/fields/utcOffsetMin/en-US }",
+                          null
+                        ]
+                      },
+                      32400000,
+                      {
+                        "$*": [
+                          "{ /store/fields/utcOffsetMin/en-US }",
+                          60000
+                        ]
+                      }
+                    ]
+                  }
                 ]
               },
               "day"

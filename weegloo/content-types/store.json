@@ -393,6 +393,40 @@
       "required": false,
       "validations": [],
       "disabled": false
+    },
+    {
+      "id": "tz8k2m4q7xw1",
+      "name": "Time zone (IANA, set by the admin screen)",
+      "apiName": "timeZone",
+      "type": "ShortText",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "regexp": {
+            "pattern": "^[A-Za-z0-9/_+-]{1,64}$"
+          },
+          "message": "Use an IANA time zone name, e.g. Asia/Seoul."
+        }
+      ],
+      "disabled": false
+    },
+    {
+      "id": "uo3n6p9r2vb5",
+      "name": "UTC offset in minutes (set by the admin screen)",
+      "apiName": "utcOffsetMin",
+      "type": "Long",
+      "localized": false,
+      "required": false,
+      "validations": [
+        {
+          "range": {
+            "min": -720,
+            "max": 840
+          }
+        }
+      ],
+      "disabled": false
     }
   ]
 }

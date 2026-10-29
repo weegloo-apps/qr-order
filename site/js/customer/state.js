@@ -1,7 +1,7 @@
 import { CONFIG } from '/js/config.js';
 import { fetchPublicMenu, fetchPublicStore, mediaUrl, plain, runScript } from '/js/api.js';
 import { lbl, t } from '/js/i18n.js';
-import { ls, setCurrency, toMs } from '/js/util.js';
+import { ls, setCurrency, setTimeZone, toMs } from '/js/util.js';
 
 // ---------- Store + menu (published, cached for the page lifetime) ----------
 // `raw` keeps every locale (CDA locale=*); `data` is that content in the current language.
@@ -15,6 +15,7 @@ function derive() {
   if (!raw.store) return;
   data.store = plain(raw.store);
   setCurrency(data.store.currency);
+  setTimeZone(data.store.timeZone);
   data.sections = raw.sections.map((x) => plain(x)).sort(bySort);
   data.items = raw.items.map((x) => {
     const it = plain(x);

@@ -229,7 +229,23 @@
               {
                 "$+": [
                   "{ /now/millis }",
-                  32400000
+                  {
+                    "$if": [
+                      {
+                        "$===": [
+                          "{ /store/fields/utcOffsetMin/en-US }",
+                          null
+                        ]
+                      },
+                      32400000,
+                      {
+                        "$*": [
+                          "{ /store/fields/utcOffsetMin/en-US }",
+                          60000
+                        ]
+                      }
+                    ]
+                  }
                 ]
               },
               "day"
