@@ -1,6 +1,6 @@
 import { BADGES, CONFIG } from '/js/config.js';
 import { admin, localized, mediaUrl, val } from '/js/api.js';
-import { badgeLabel, contentLocale, defaultLocale, getLocales, langName, lbl, t } from '/js/i18n.js';
+import { badgeLabel, contentLocale, defaultLocale, getLocales, langName, lbl, presetFor, t } from '/js/i18n.js';
 import { localeTabs, missingNote } from '/js/lang-ui.js';
 import { currencySymbol, fractionDigits, getCurrency, h, icon, majorInput, money, toMinor, toast, fill } from '/js/util.js';
 import { adminData, loadMenu, replaceRow, toLocaleMap } from '/js/admin/data.js';
@@ -44,10 +44,10 @@ function withDefault(m) {
 }
 const hasText = (m) => Object.keys(trimMap(m)).length > 0;
 
-// Preset names in the languages the dictionaries know; a Space locale without one gets the English name.
+// Preset names in each Space locale's UI language (see presetFor); other locales get the English name.
 function presetName(byLang) {
   const out = {};
-  for (const l of getLocales()) out[l.code] = byLang[l.code.split('-')[0]] || byLang.en;
+  for (const l of getLocales()) out[l.code] = byLang[presetFor(l.code)] || byLang.en;
   return out;
 }
 // Form prices are typed in the store currency's normal unit ("4500" won, "4.50" dollars) and saved
@@ -55,13 +55,24 @@ function presetName(byLang) {
 const upcharge = () => (fractionDigits() ? (0.5).toFixed(fractionDigits()) : '500');
 const zero = () => (0).toFixed(fractionDigits());
 const priceStep = () => (fractionDigits() ? 1 / 10 ** fractionDigits() : getCurrency() === 'KRW' ? 100 : 1);
+// Preset option names in each UI language (i18n.js PRESETS).
+const NAMES = {
+  temp: { en: 'Temperature', ko: '온도', ja: '温度', zh: '温度', de: 'Temperatur', fr: 'Température', es: 'Temperatura', pt: 'Temperatura', hi: 'तापमान', id: 'Suhu' },
+  hot: { en: 'Hot', ko: '핫', ja: 'ホット', zh: '热', de: 'Heiß', fr: 'Chaud', es: 'Caliente', pt: 'Quente', hi: 'गरम', id: 'Panas' },
+  ice: { en: 'Iced', ko: '아이스', ja: 'アイス', zh: '冰', de: 'Mit Eis', fr: 'Glacé', es: 'Con hielo', pt: 'Gelado', hi: 'ठंडा', id: 'Dingin' },
+  size: { en: 'Size', ko: '사이즈', ja: 'サイズ', zh: '规格', de: 'Größe', fr: 'Taille', es: 'Tamaño', pt: 'Tamanho', hi: 'साइज़', id: 'Ukuran' },
+  regular: { en: 'Regular', ko: '레귤러', ja: 'レギュラー', zh: '中杯', de: 'Normal', fr: 'Normal', es: 'Normal', pt: 'Normal', hi: 'रेगुलर', id: 'Reguler' },
+  large: { en: 'Large', ko: '라지', ja: 'ラージ', zh: '大杯', de: 'Groß', fr: 'Grand', es: 'Grande', pt: 'Grande', hi: 'लार्ज', id: 'Besar' },
+  extra: { en: 'Extras', ko: '추가 옵션', ja: 'トッピング', zh: '加料', de: 'Extras', fr: 'Suppléments', es: 'Extras', pt: 'Adicionais', hi: 'एक्स्ट्रा', id: 'Tambahan' },
+  shot: { en: 'Extra shot', ko: '샷 추가', ja: 'ショット追加', zh: '加浓缩', de: 'Extra Shot', fr: 'Shot en plus', es: 'Shot extra', pt: 'Dose extra', hi: 'एक्स्ट्रा शॉट', id: 'Ekstra shot' },
+};
 const PRESETS = {
-  temp: () => ({ id: uid('g'), name: presetName({ en: 'Temperature', ko: '온도' }), required: true, multi: false, options: [
-    { id: 'hot', name: presetName({ en: 'Hot', ko: '핫' }), price: zero() }, { id: 'ice', name: presetName({ en: 'Iced', ko: '아이스' }), price: zero() }] }),
-  size: () => ({ id: uid('g'), name: presetName({ en: 'Size', ko: '사이즈' }), required: true, multi: false, options: [
-    { id: 'regular', name: presetName({ en: 'Regular', ko: '레귤러' }), desc: '355ml', price: zero() }, { id: 'large', name: presetName({ en: 'Large', ko: '라지' }), desc: '473ml', price: upcharge() }] }),
-  extra: () => ({ id: uid('g'), name: presetName({ en: 'Extras', ko: '추가 옵션' }), required: false, multi: true, options: [
-    { id: uid('o'), name: presetName({ en: 'Extra shot', ko: '샷 추가' }), price: upcharge() }] }),
+  temp: () => ({ id: uid('g'), name: presetName(NAMES.temp), required: true, multi: false, options: [
+    { id: 'hot', name: presetName(NAMES.hot), price: zero() }, { id: 'ice', name: presetName(NAMES.ice), price: zero() }] }),
+  size: () => ({ id: uid('g'), name: presetName(NAMES.size), required: true, multi: false, options: [
+    { id: 'regular', name: presetName(NAMES.regular), desc: '355ml', price: zero() }, { id: 'large', name: presetName(NAMES.large), desc: '473ml', price: upcharge() }] }),
+  extra: () => ({ id: uid('g'), name: presetName(NAMES.extra), required: false, multi: true, options: [
+    { id: uid('o'), name: presetName(NAMES.shot), price: upcharge() }] }),
 };
 
 export async function menuPage(main, { isCurrent }) {

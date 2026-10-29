@@ -189,7 +189,15 @@ export function storeMidnight(ms = Date.now(), offset = 0) {
 export const toMs = (iso) => new Date(iso).getTime();
 export const hm = (ms) => { const p = storeTime(ms); return `${pad(p.hh)}:${pad(p.mi)}`; };
 export const dateLabel = (ms) => new Intl.DateTimeFormat(uiTag(), { month: 'long', day: 'numeric', weekday: 'long', timeZone: zone }).format(ms);
-export const md = (ms) => { const p = storeTime(ms); return `${p.mo + 1}/${p.d}`; };
+// Month and day in the UI language's order ("10/28", "28.10.", "28/10"); Korean keeps "10/28".
+const mdFmt = new Map();
+export function md(ms) {
+  const p = storeTime(ms);
+  const tag = uiTag();
+  if (tag.startsWith('ko')) return `${p.mo + 1}/${p.d}`;
+  if (!mdFmt.has(tag)) mdFmt.set(tag, new Intl.DateTimeFormat(tag, { month: 'numeric', day: 'numeric', timeZone: 'UTC' }));
+  return mdFmt.get(tag).format(Date.UTC(p.y, p.mo, p.d));
+}
 export const minToHM = (min) => `${pad(Math.floor(((min % 1440) + 1440) % 1440 / 60))}:${pad(((min % 60) + 60) % 60)}`;
 export function hmToMin(s) {
   const [a, b] = String(s || '').split(':').map(Number);

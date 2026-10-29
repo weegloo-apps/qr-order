@@ -21,6 +21,8 @@
   --font: 'Noto Sans KR', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   color-scheme: light;
 }
+/* Japanese and Chinese pages use the system font for their language: Noto Sans KR draws Han characters in their Korean forms. */
+:root:lang(ja), :root:lang(zh) { --font: system-ui, -apple-system, sans-serif; }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; font-family: var(--font); color: var(--ink); background: #FFFFFF; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; line-height: 1.45; }
@@ -63,6 +65,7 @@ svg { flex: none; }
 .lang-admin { border-color: var(--a-bd); }
 .lang-login { align-self: flex-end; }
 .loc-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg.loc-tabs { flex: 0 1 auto; min-width: 0; flex-wrap: wrap; } /* many Space locales wrap instead of overflowing */
 .loc-tabs button { display: inline-flex; align-items: center; }
 .loc-default { margin-left: 4px; font-weight: 500; color: var(--muted2); }
 .loc-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--a-soft); color: var(--muted); font-size: 11px; font-weight: 600; vertical-align: 1px; }
@@ -193,7 +196,7 @@ svg { flex: none; }
 .cart-name { font-size: 15px; font-weight: 600; }
 .cart-opt { font-size: 12px; color: var(--muted); }
 .cart-unit { font-size: 13px; color: var(--muted2); }
-.cart-line-total { flex: none; width: 76px; text-align: right; font-size: 15px; font-weight: 700; }
+.cart-line-total { flex: none; min-width: 76px; text-align: right; font-size: 15px; font-weight: 700; white-space: nowrap; }
 .link-btn { align-self: flex-start; margin-top: 8px; min-height: 44px; display: inline-flex; align-items: center; gap: 2px; padding: 0 4px; border: 0; background: transparent; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; color: var(--ink); }
 .link-btn-sm { min-height: 36px; margin-top: 0; font-size: 13px; }
 .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -473,6 +476,7 @@ select.input { padding: 0 10px; }
 .postcode-layer { width: 100%; height: 460px; border: 1px solid var(--a-bd); border-radius: 12px; overflow: hidden; }
 .hour-row { display: flex; align-items: center; gap: 16px; min-height: 52px; border-top: 1px solid var(--a-soft); flex-wrap: wrap; padding: 6px 0; }
 .hour-day { width: 28px; font-size: 15px; font-weight: 700; }
+:root:not(:lang(ko)) .hour-day { width: 40px; } /* "Wed", "sam.", "dom." need more room than Korean's one letter */
 .toggle-inline { min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 0; background: transparent; font-size: 13px; font-weight: 600; }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--a-soft); }
 .toggle-label { font-size: 15px; font-weight: 600; }

@@ -98,7 +98,8 @@ export async function salesPage(main, { isCurrent }) {
       for (const x of rows) lines.push([x.label, x.closed ? t('r.closed') : x.received, x.rejected + x.refunded, x.qty, amt(x.avg), amt(x.sales)]);
       lines.push([t('c.total'), a.received, a.rejected + a.refunded, a.qty, amt(a.avg), amt(a.sales)], [], [t('r.byItem')], [t('r.colItem'), t('r.colSection'), t('r.colQty'), `${t('r.revNoOpt')} (${cur})`]);
       for (const it of sorted) lines.push([it.name, sectionName(it.sectionId), it.qty, amt(it.rev)]);
-      download(t('r.file', { range: t(conf.file), date: md(Date.now()).replace('/', '') }), csv(lines));
+      const today = storeTime(Date.now());
+      download(t('r.file', { range: t(conf.file), date: `${today.mo + 1}${today.d}` }), csv(lines));
     };
 
     fill(main, 

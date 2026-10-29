@@ -96,7 +96,7 @@ Weegloo 마켓플레이스 앱 **작은 테이블 QR 오더**의 소스코드입
 | `js/customer/views.js` | `place()`: `place-order` 응답의 `res.pay`를 받아 결제로 넘어가는 부분. 브라우저 SDK형 PG는 여기서 결제창을 엽니다. `stripeLocale()` / `STRIPE_LOCALES`: Stripe 결제창 언어(필요 없으면 삭제). `testCardNote()`: 테스트 카드 안내(삭제). `paidScreen()`: `/paid/{주문 id}`에서 `confirm-payment`를 부르는 부분 — PG가 돌려준 쿼리 값을 함께 넘기도록 고칩니다. |
 | `js/customer/state.js` | `confirmPayment()`, 결제 화면이 닫혀 돌아오지 못한 주문을 다음에 메뉴를 열 때 확인하는 `recoverPayments()` |
 | `js/config.js` | `TEST_CARD` 삭제 |
-| `js/i18n.js` | `s.t.prepayTest` 등 Stripe가 들어간 문구 |
+| `js/i18n.js`, `i18n/*.js` | `s.t.prepayTest`, `c.test.card` 등 Stripe가 들어간 문구(영어와 나머지 아홉 언어 각각) |
 | `index.html` | 브라우저 SDK형 PG면 SDK `<script>` 태그 추가 |
 
 ### 꼭 지킬 것
@@ -149,5 +149,10 @@ Script를 추가하는 것이 좋습니다.
 
 - **시간대**: 시각은 UTC로 저장하고, 화면은 매장 시간대로 보여 줍니다. 관리자 화면을 처음 열면 그 기기의 시간대(`store.timeZone`, 예: `Asia/Seoul`)와 지금의 UTC 차이(분, `store.utcOffsetMin`)를 매장 정보에 저장합니다. 시간대는 그 뒤로 바뀌지 않고, UTC 차이는 서머타임이 바뀐 뒤 관리자 화면을 열면 다시 저장됩니다. Script는 시간대를 변환할 수 없어서 `place-order`와 `confirm-payment`는 `utcOffsetMin`으로 영업 시간, 라스트 오더, 주문이 속한 날(`businessDay`, 매일 `A-001`부터 시작하는 주문 번호)을 정합니다. 값이 아직 없으면 한국 시간(`32400000`, 9시간)을 씁니다. 2026년 10월 29일 전에 설치했다면 내 Space에는 두 필드와 이 로직이 없어 한국 시간 그대로입니다. `weegloo/content-types/store.json`의 두 필드를 추가하고, 두 Script의 `32400000`을 `weegloo/scripts/`처럼 바꿔 주세요.
 - **기본 로케일**: Script는 언어와 상관없는 값을 `en-US`에서 읽고 씁니다. Space의 기본 로케일이 `en-US`라고 가정합니다.
-- **화면 문구**: `site/js/i18n.js`의 영어·한국어 사전입니다. 언어 목록은 Space의 Locale을 따릅니다.
+- **화면 문구(10개 언어)**: 영어 · 한국어 · 일본어 · 중국어(간체) · 독일어 · 프랑스어 · 스페인어 · 포르투갈어 · 힌디어 · 인도네시아어. 영어 원문은 `site/js/i18n.js`의 `EN` 사전이고, 나머지 아홉 언어는 `site/i18n/<언어>.js`(`ko`, `ja`, `zh`, `de`, `fr`, `es`, `pt`, `hi`, `id`)에 있어 그 언어를 쓸 때만 내려받습니다. 키나 값이 빠지면 영어 문구가 나옵니다.
+  - 언어 목록은 Space의 Locale을 따르고, Locale은 언어 부분으로 사전을 고릅니다(`ja-JP` → `ja`, `pt-BR` → `pt`). 사전이 없는 언어(예: `nl`)와 번체 중국어(`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant…`)는 문구가 영어로, 콘텐츠는 그 언어로 보입니다. 다른 언어를 쓰려면 Space에 Locale을 추가하세요.
+  - 숫자 · 날짜 · 통화 형식(`Intl`), Stripe 결제 화면 언어, 지도 언어도 화면 문구의 언어를 따르고, 사전이 없는 언어는 영어(`en-US`) 형식입니다. Stripe에 없는 힌디어는 Stripe가 브라우저 언어로 고릅니다(`auto`). 일본어 · 중국어 화면은 한자가 한국어 글꼴(Noto Sans KR)로 그려지지 않도록 시스템 글꼴을 씁니다.
+  - 관리자 화면도 같은 언어 선택을 따릅니다(입력 언어 탭과는 별개). 메뉴 편집의 옵션 프리셋(온도 · 사이즈 · 추가 옵션) 이름도 10개 언어로 `site/js/admin/menu.js`에 있습니다.
+  - 템플릿: `{name}`은 값, `{n#단수/복수}`는 n이 1이면 앞쪽, `{name~을/를}`은 한국어 전용 조사입니다. 언어를 추가하려면 `site/i18n/ko.js`를 복사해 값만 번역하고(키와 `{…}` 이름은 그대로), `site/js/i18n.js`의 `PRESETS`와 `admin/menu.js`의 프리셋 이름에 언어 코드를 넣습니다.
+  - 영어 · 한국어 외 여덟 언어는 기계 번역입니다. 실제 매장에 쓰기 전에 원어민 검토를 권합니다. "Powered by Weegloo"는 번역하지 않습니다.
 - **사용량**: 손님 화면은 주문을 보고 있는 동안 10초마다(최대 1시간) `order-status`를 부르고, 이는 Weegloo Script 실행 횟수에 포함됩니다.
