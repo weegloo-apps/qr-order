@@ -16,7 +16,7 @@ const blankForm = (sectionId) => ({ name: {}, price: '', sectionId, badge: '', d
 // ---------- Menu photos ----------
 // Upload → Media; the platform processes it and publishes it by itself, so wait (bounded, by id) until
 // it is Published with a finished file before the menu item points at it.
-const MAX_PHOTO_BYTES = 50 * 1024 * 1024; // the smallest plan's per-file cap; larger plans allow more
+const MAX_PHOTO_BYTES = 50 * 1024 * 1024; // below every plan's per-file cap, and plenty for a menu photo
 async function waitForMedia(id) {
   for (const ms of [700, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 8000]) {
     await sleep(ms);

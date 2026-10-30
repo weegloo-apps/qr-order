@@ -221,39 +221,6 @@
         ]
       },
       {
-        "type": "SetVar",
-        "var": "clock",
-        "value": {
-          "day": {
-            "$date": [
-              {
-                "$+": [
-                  "{ /now/millis }",
-                  {
-                    "$if": [
-                      {
-                        "$===": [
-                          "{ /store/fields/utcOffsetMin/en-US }",
-                          null
-                        ]
-                      },
-                      32400000,
-                      {
-                        "$*": [
-                          "{ /store/fields/utcOffsetMin/en-US }",
-                          60000
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
-              "day"
-            ]
-          }
-        }
-      },
-      {
         "type": "Loop",
         "name": "attempt",
         "while": {
@@ -286,13 +253,65 @@
                   }
                 },
                 "fields": {
-                  "day": "{ /vars/clock/day }",
+                  "day": {
+                    "$date": [
+                      {
+                        "$+": [
+                          "{ /now/millis }",
+                          {
+                            "$if": [
+                              {
+                                "$===": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  null
+                                ]
+                              },
+                              32400000,
+                              {
+                                "$*": [
+                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                  60000
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "day"
+                    ]
+                  },
                   "seq": {
                     "$if": [
                       {
                         "$==": [
                           "{ /ctr/fields/day/en-US }",
-                          "{ /vars/clock/day }"
+                          {
+                            "$date": [
+                              {
+                                "$+": [
+                                  "{ /now/millis }",
+                                  {
+                                    "$if": [
+                                      {
+                                        "$===": [
+                                          "{ /store/fields/utcOffsetMin/en-US }",
+                                          null
+                                        ]
+                                      },
+                                      32400000,
+                                      {
+                                        "$*": [
+                                          "{ /store/fields/utcOffsetMin/en-US }",
+                                          60000
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "day"
+                            ]
+                          }
                         ]
                       },
                       {
@@ -317,7 +336,33 @@
                     {
                       "$==": [
                         "{ /ctr/fields/day/en-US }",
-                        "{ /vars/clock/day }"
+                        {
+                          "$date": [
+                            {
+                              "$+": [
+                                "{ /now/millis }",
+                                {
+                                  "$if": [
+                                    {
+                                      "$===": [
+                                        "{ /store/fields/utcOffsetMin/en-US }",
+                                        null
+                                      ]
+                                    },
+                                    32400000,
+                                    {
+                                      "$*": [
+                                        "{ /store/fields/utcOffsetMin/en-US }",
+                                        60000
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "day"
+                          ]
+                        }
                       ]
                     },
                     {
@@ -361,39 +406,6 @@
         ]
       },
       {
-        "type": "SetVar",
-        "var": "no",
-        "value": {
-          "$cat": [
-            "A-",
-            {
-              "if": [
-                {
-                  "<": [
-                    "{ /vars/seq }",
-                    10
-                  ]
-                },
-                "00",
-                {
-                  "if": [
-                    {
-                      "<": [
-                        "{ /vars/seq }",
-                        100
-                      ]
-                    },
-                    "0",
-                    ""
-                  ]
-                }
-              ]
-            },
-            "{ /vars/seq }"
-          ]
-        }
-      },
-      {
         "type": "Try",
         "body": [
           {
@@ -407,9 +419,63 @@
             "fields": {
               "status": "new",
               "payment": "paid",
-              "orderNo": "{ /vars/no }",
+              "orderNo": {
+                "$cat": [
+                  "A-",
+                  {
+                    "if": [
+                      {
+                        "<": [
+                          "{ /vars/seq }",
+                          10
+                        ]
+                      },
+                      "00",
+                      {
+                        "if": [
+                          {
+                            "<": [
+                              "{ /vars/seq }",
+                              100
+                            ]
+                          },
+                          "0",
+                          ""
+                        ]
+                      }
+                    ]
+                  },
+                  "{ /vars/seq }"
+                ]
+              },
               "paymentIntentId": "{ /chk/body/payment_intent }",
-              "businessDay": "{ /vars/clock/day }"
+              "businessDay": {
+                "$date": [
+                  {
+                    "$+": [
+                      "{ /now/millis }",
+                      {
+                        "$if": [
+                          {
+                            "$===": [
+                              "{ /store/fields/utcOffsetMin/en-US }",
+                              null
+                            ]
+                          },
+                          32400000,
+                          {
+                            "$*": [
+                              "{ /store/fields/utcOffsetMin/en-US }",
+                              60000
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "day"
+                ]
+              }
             },
             "locale": "en-US",
             "version": "{ /o/sys/version }",
@@ -435,7 +501,35 @@
           "ok": true,
           "order": {
             "id": "{ /o/sys/id }",
-            "orderNo": "{ /vars/no }",
+            "orderNo": {
+              "$cat": [
+                "A-",
+                {
+                  "if": [
+                    {
+                      "<": [
+                        "{ /vars/seq }",
+                        10
+                      ]
+                    },
+                    "00",
+                    {
+                      "if": [
+                        {
+                          "<": [
+                            "{ /vars/seq }",
+                            100
+                          ]
+                        },
+                        "0",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                "{ /vars/seq }"
+              ]
+            },
             "status": "new",
             "tableNo": "{ /o/fields/tableNo/en-US }",
             "orderType": "{ /o/fields/orderType/en-US }",

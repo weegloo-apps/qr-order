@@ -17,7 +17,7 @@ account to handle orders, edit the menu and store settings, and see sales.
 | Path | Contents |
 |---|---|
 | `site/` | Guest and owner screens. A static site with no build step (ES modules); every asset path starts with `/`. Deploy it as is to Weegloo Web Hosting (SPA mode). |
-| `weegloo/scripts/` | The five Weegloo Scripts that run on the server: `place-order`, `confirm-payment`, `refund-order`, `order-status`, `staff-call` |
+| `weegloo/scripts/` | The six Weegloo Scripts that run on the server: `place-order`, `start-checkout`, `confirm-payment`, `refund-order`, `order-status`, `staff-call` |
 | `weegloo/content-types/` | The data model: store settings (`store`), menu section (`section`), menu item (`item`), order (`order`), staff call (`call`), order counter (`counter`) |
 | `weegloo/space-role.customer.json` | The role behind the guest screen's token (what it may read and which Scripts it may run) |
 
@@ -44,17 +44,18 @@ This source holds no values from any particular Space. It has placeholders such 
 | `__SCRIPT_PLACE_ORDER__` … `__SCRIPT_REFUND_ORDER__` | `scripts.placeOrder` … `scripts.refundOrder` | Script ids |
 | `__GOOGLE_MAPS_EMBED_KEY__` | `mapsEmbedKey` | Key for the map on the store info screen (Google Maps Embed API) |
 
-> You don't set the return addresses after payment (`success_url`, `cancel_url`). `place-order` builds them from the address of
-> the site the order came from, so your installed address or your own domain is used as is. If you installed before
-> October 29, 2026, both addresses in your Space's `place-order` may be fixed to another site. Change them to start with
-> `{ /headers/origin }`, as in `weegloo/scripts/place-order.json`.
+> You don't set the return addresses after payment (`success_url`, `cancel_url`). `start-checkout` builds them from the address
+> of the site the order came from, so your installed address or your own domain is used as is. If your Space has no
+> `start-checkout` Script (an older install), `place-order` creates the Stripe session itself, and in installs from before
+> October 29, 2026 both addresses there may be fixed to another site. Moving to the current Scripts fixes both
+> (see [Updating an older install](#updating-an-older-install)).
 
 ## How it works
 
 | Caller | API | Credential |
 |---|---|---|
-| Guest: reads the store and menu | CDA (published only) | `customerToken` — may only read store, sections and menu, and run the four guest Scripts |
-| Guest: order, payment check, order status, staff call | Script `/execute` | Same token |
+| Guest: reads the store and menu | CDA (published only) | `customerToken` — may only read store, sections and menu, and run the five guest Scripts |
+| Guest: order, payment start, payment check, order status, staff call | Script `/execute` | Same token |
 | Owner: everything else | CMA (+ the `refund-order` Script) | Weegloo console sign-in popup token; members of this Space only |
 
 - **The server decides the amount.** `place-order` totals the order from the published menu and option prices and stores it on the order (`total`). Amounts sent by the screen are never used.
@@ -65,15 +66,16 @@ This source holds no values from any particular Space. It has placeholders such 
 
 When **Pay when ordering** (`store.prepay`) is on:
 
-1. Ordering from the cart calls `place-order`, which computes the amount, stores the order with `status: pending` and `payment: pending`, creates a Stripe Checkout session and returns `{ pay: { orderId, url } }`. Pending orders do not appear on the owner's screens.
-   The return addresses are built from the request's `Origin` header (the site the order came from). Without that header, or when it is not a site address, no order is created and the call is refused with `bad-origin`.
-2. The screen (`place()` in `site/js/customer/views.js`) remembers the order id on the device (`addPendingPay`) and goes to the Stripe payment page.
-3. After payment, Stripe sends the guest to `success_url` (`/paid/{order id}`). That screen (`paidScreen()`) calls `confirm-payment`.
-4. `confirm-payment` looks up the Stripe session and, only if `payment_status: paid`, `client_reference_id` (= the order id) and `amount_total` (= the order's `total`) all match, gives the order its number (from `A-001` each day) and sets `status: new`, `payment: paid`. This is when the owner's alert sounds. The order is patched with a `sys.version` lock, so it is never confirmed twice.
-5. If the guest cancels, Stripe returns them to `cancel_url` (`/cart?pay=cancel&order=…`) with the cart untouched.
-6. When the owner rejects or refunds a paid order, `refund-order` asks Stripe for a refund (an `Idempotency-Key` prevents a double refund) and only after Stripe accepts it marks the order `rejected` (a served order stays `done`) and `payment: refunded`.
+1. Ordering from the cart calls `place-order`, which computes the amount, stores the order with `status: pending` and `payment: pending` and returns `{ prepay: true, order: { id, … } }`. Pending orders do not appear on the owner's screens.
+2. The screen (`place()` in `site/js/customer/views.js`) then calls `start-checkout` with that order id. It creates a Stripe Checkout session for the amount stored on the order and returns `{ pay: { orderId, url } }`. It does this once per order (it marks the order first, with a `sys.version` lock) and only within 30 minutes of the order.
+   The return addresses are built from the request's `Origin` header (the site the order came from). Without that header, or when it is not a site address, the call is refused with `bad-origin` and the order stays `pending`, never shown.
+3. The screen remembers the order id on the device (`addPendingPay`) and goes to the Stripe payment page.
+4. After payment, Stripe sends the guest to `success_url` (`/paid/{order id}`). That screen (`paidScreen()`) calls `confirm-payment`.
+5. `confirm-payment` looks up the Stripe session and, only if `payment_status: paid`, `client_reference_id` (= the order id) and `amount_total` (= the order's `total`) all match, gives the order its number (from `A-001` each day) and sets `status: new`, `payment: paid`. This is when the owner's alert sounds. The order is patched with a `sys.version` lock, so it is never confirmed twice.
+6. If the guest cancels, Stripe returns them to `cancel_url` (`/cart?pay=cancel&order=…`) with the cart untouched.
+7. When the owner rejects or refunds a paid order, `refund-order` asks Stripe for a refund (an `Idempotency-Key` prevents a double refund) and only after Stripe accepts it marks the order `rejected` (a served order stays `done`) and `payment: refunded`.
 
-With **Pay when ordering** off, `place-order` calls no provider and stores the order as `new` with its number right away (pay at the counter).
+With **Pay when ordering** off, `place-order` stores the order as `new` with its number right away (pay at the counter), and the screen skips `start-checkout`. `place-order` never calls the payment provider.
 
 ## Switching to another payment provider
 
@@ -83,18 +85,19 @@ With **Pay when ordering** off, `place-order` calls no provider and stores the o
 
 | Script | Now | Change |
 |---|---|---|
-| `place-order` | With `prepay`, creates a `pending` order and a Stripe Checkout session | Keep the `pending` order and replace only the Stripe call (`Http`). For a provider whose payment page URL is created on the server, return that URL as `pay.url` (build its return addresses from `{ /headers/origin }`, as now). For a provider that opens its payment window with a browser SDK (Toss Payments and others), drop the provider call and return just `{ pay: { orderId, amount, orderName } }`. |
+| `place-order` | With `prepay`, creates a `pending` order and returns `prepay: true` | Nothing: it never calls the provider. |
+| `start-checkout` | Creates a Stripe Checkout session for the order's stored `total` | Replace the Stripe call (`Http`). For a provider whose payment page URL is created on the server, return that URL as `pay.url` (build its return addresses from `{ /headers/origin }`, as now). For a provider that opens its payment window with a browser SDK (Toss Payments and others), drop the provider call and return just `{ pay: { orderId, amount, orderName } }`, with the amount taken from the order. |
 | `confirm-payment` | Looks up the Stripe session, then confirms | Check the payment with the provider's approval/lookup API. Compare the amount with **the order's `total`**. If you need values the provider returns (e.g. `paymentKey`), add them to `payloadSchema`. |
 | `refund-order` | Stripe refunds API | The provider's cancel (refund) API |
 
-- Keep the secret key only in the Script's **secrets** (`definition.secrets`). It is `STRIPE_SECRET_KEY` today, and its value is empty in this repository's files. Anything in the browser code (`site/`) can be read by anyone.
+- Keep the secret key only in the Script's **secrets** (`definition.secrets`). It is `STRIPE_SECRET_KEY` today (in `start-checkout`, `confirm-payment` and `refund-order`), and its value is empty in this repository's files. Anything in the browser code (`site/`) can be read by anyone.
 - The order's `stripeSessionId`, `paymentIntentId` and `refundId` fields (RichText) are used only by the Scripts. You can keep the provider's payment key in `paymentIntentId` or add a new field. The site code does not read these fields.
 
 **Screens (`site/`)**
 
 | File | Where |
 |---|---|
-| `js/customer/views.js` | `place()`: where the `res.pay` from `place-order` moves on to payment; a browser-SDK provider opens its payment window here. `stripeLocale()` / `STRIPE_LOCALES`: Stripe's checkout language (delete if unused). `testCardNote()`: the test card notice (delete). `paidScreen()`: calls `confirm-payment` on `/paid/{order id}` — make it pass the query values the provider returns. |
+| `js/customer/views.js` | `place()`: where a `prepay` reply from `place-order` calls `start-checkout` and moves on to its `pay`; a browser-SDK provider opens its payment window here. `stripeLocale()` / `STRIPE_LOCALES`: Stripe's checkout language (delete if unused). `testCardNote()`: the test card notice (delete). `paidScreen()`: calls `confirm-payment` on `/paid/{order id}` — make it pass the query values the provider returns. |
 | `js/customer/state.js` | `confirmPayment()`, and `recoverPayments()`, which checks orders whose return page never loaded the next time the menu opens |
 | `js/config.js` | Delete `TEST_CARD` |
 | `js/i18n.js`, `i18n/*.js` | Strings that mention Stripe, such as `s.t.prepayTest` and `c.test.card`, in English and each of the other nine languages |
@@ -114,10 +117,11 @@ With **Pay when ordering** off, `place-order` calls no provider and stores the o
 Toss Payments opens the payment window with a browser SDK, and the payment completes only when the server
 calls the **confirm API** after the guest returns. Follow the [Toss Payments developer docs](https://docs.tosspayments.com) for the exact API and keys.
 
-1. **`place-order`**: in the `prepay` branch, remove the Stripe `Http` and the `stripeSessionId` patch, create the
-   `pending` order and return `{ ok: true, pay: { orderId: <order id>, amount: <total>, orderName: <store name · table> } }`.
-   A Weegloo order id (30 letters and digits) fits Toss's `orderId` rule (6–64 characters of letters, digits, `-`, `_`).
-2. **Screen**: add the Toss SDK to `index.html` and request the payment from `res.pay` in `place()`, with
+1. **`start-checkout`**: remove the Stripe `Http` and the patch that stores its session id, keep the checks before them
+   and return `{ ok: true, pay: { orderId: <order id>, amount: <the order's total>, orderName: <store name · table> } }`.
+   `place-order` stays as it is. A Weegloo order id (30 letters and digits) fits Toss's `orderId` rule (6–64 characters
+   of letters, digits, `-`, `_`).
+2. **Screen**: add the Toss SDK to `index.html` and request the payment from that `pay` in `place()`, with
    `successUrl` = `${location.origin}/paid/${orderId}` and `failUrl` = `${location.origin}/cart?pay=cancel&order=${orderId}`.
 3. **Return screen**: Toss appends `paymentKey`, `orderId` and `amount` to `successUrl`. Make `paidScreen()` pass
    `{ orderId, paymentKey }` to `confirm-payment`, and add `paymentKey` to its `payloadSchema`. The server ignores the query's `amount`.
@@ -133,9 +137,38 @@ calls the **confirm API** after the guest returns. Follow the [Toss Payments dev
 ### Staying on Stripe
 
 Put your own Stripe secret key (a restricted `rk_live_…` key is recommended) into the `STRIPE_SECRET_KEY` secret
-of the three Scripts, delete `TEST_CARD` and the test card notice (`testCardNote()`), and go through Stripe's
+of the three Scripts that call Stripe (`start-checkout`, `confirm-payment`, `refund-order`), delete `TEST_CARD` and the test card notice (`testCardNote()`), and go through Stripe's
 go-live checklist. To catch guests who close the page right after paying, add a Script that receives Stripe's
 `checkout.session.completed` webhook.
+
+## Weegloo Free plan
+
+QR Order fits the Weegloo Free plan. Limits there apply to the whole Organization, shared by all its Spaces.
+
+- **Script size**: 30 statements per Script, nested ones included. The Scripts here use place-order 29,
+  confirm-payment 29, start-checkout 23, staff-call 21, refund-order 18 and order-status 15. That is why starting
+  the payment is a Script of its own. Keep any change you make within 30.
+- **Number of Scripts**: 6 of the Organization's 10.
+- **Script runs**: 10,000 a month. When they run out, every Script in the Organization is blocked until the next
+  month or an upgrade, so guests can no longer order. An order uses one `place-order` run (with Pay when ordering,
+  one `start-checkout` and one `confirm-payment` more), a staff call one run, and while a guest keeps the order
+  screen visible, one `order-status` run every 20 seconds (for up to 1 hour). A guest who watches for 10 minutes
+  uses about 33 runs for one order, which comes to roughly 300 orders a month. Busier stores need a paid plan
+  (Basic: 100,000 runs, 50 statements per Script).
+- **Content**: orders and staff calls are kept and count toward the Content limit (20,000).
+
+### Updating an older install
+
+If your Space has no `start-checkout` Script, its `place-order` creates the Stripe session itself and is over the
+Free plan's 30 statements. To move to the current Scripts:
+
+1. Create a Script from `weegloo/scripts/start-checkout.json` (replace the placeholders as in the table above) and put
+   your Stripe secret key in its `STRIPE_SECRET_KEY` secret.
+2. Add it to the guest role's Script `Execute` list, as in `weegloo/space-role.customer.json`.
+3. Set its id as `scripts.startCheckout` in `site/js/config.js` and deploy the site (below). The screen works with both
+   the old and the new `place-order`, so nothing breaks between steps.
+4. Overwrite `place-order` and `confirm-payment` with the files in `weegloo/scripts/` (placeholders replaced). The files
+   carry the secret empty, so put your Stripe secret key back in `confirm-payment`'s `STRIPE_SECRET_KEY`.
 
 ## Deploying
 
@@ -155,4 +188,4 @@ go-live checklist. To catch guests who close the page right after paying, add a 
   - The admin screens follow the same language choice (separate from the input-language tabs). The menu editor's option presets (temperature, size, extras) are named in all ten languages in `site/js/admin/menu.js`.
   - Templates: `{name}` is a value, `{n#singular/plural}` takes the first form when n is 1, and `{name~을/를}` is a Korean-only particle. To add a language, copy `site/i18n/ko.js` and translate the values only (keep the keys and the `{…}` names), then add the language code to `PRESETS` in `site/js/i18n.js` and to the preset names in `site/js/admin/menu.js`.
   - The eight languages other than English and Korean are machine translations; have a native speaker review them before a real store uses them. "Powered by Weegloo" is not translated.
-- **Usage**: while a guest is watching an order, the guest screen calls `order-status` every 10 seconds (for up to 1 hour), which counts toward Weegloo Script runs.
+- **Usage**: while a guest is watching an order, the guest screen calls `order-status` every 20 seconds (for up to 1 hour), which counts toward Weegloo Script runs (see [Weegloo Free plan](#weegloo-free-plan)).

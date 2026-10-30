@@ -1,6 +1,6 @@
 {
   "name": "QR customer (menu read + order scripts)",
-  "description": "Customer token: read store/menu/photos; run only place-order, confirm-payment, order-status, staff-call",
+  "description": "Customer token: read store/menu/photos; run only place-order, start-checkout, confirm-payment, order-status, staff-call",
   "contentType": {
     "Read": {
       "Allow": [
@@ -80,6 +80,15 @@
           "self": {
             "sys": {
               "id": "__SCRIPT_PLACE_ORDER__",
+              "type": "Refer",
+              "targetType": "Script"
+            }
+          }
+        },
+        {
+          "self": {
+            "sys": {
+              "id": "__SCRIPT_START_CHECKOUT__",
               "type": "Refer",
               "targetType": "Script"
             }

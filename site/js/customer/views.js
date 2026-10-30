@@ -368,16 +368,20 @@ function cartScreen(root) {
     if (!lines.length || sending) return;
     sending = true;
     paint();
-    const payload = { tableNo: getTable(), orderType, lines, locale: stripeLocale() };
+    const payload = { tableNo: getTable(), orderType, lines };
     const note = (v.cart.note || '').trim();
     if (data.store.allowNote && note) payload.note = note.slice(0, 200);
     try {
       const res = await runScript(CONFIG.scripts.placeOrder, payload);
-      if (res.pay) {
-        // Pay first: the order reaches the kitchen only after the server confirms it with Stripe.
-        // The cart stays until then, so a cancelled payment loses nothing.
-        addPendingPay(res.pay.orderId);
-        location.assign(res.pay.url);
+      // Pay first: place-order prices and stores a pending order, start-checkout opens its Stripe
+      // payment page. The order reaches the kitchen only after the server confirms it with Stripe,
+      // and the cart stays until then, so a cancelled payment loses nothing.
+      const pay = res.pay || (res.prepay
+        ? (await runScript(CONFIG.scripts.startCheckout, { orderId: res.order.id, locale: stripeLocale() })).pay
+        : null);
+      if (pay) {
+        addPendingPay(pay.orderId);
+        location.assign(pay.url);
         return;
       }
       saveOrder({ ...res.order, prepMinutes: res.prepMinutes, updatedAt: res.order.createdAt });

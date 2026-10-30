@@ -1,7 +1,7 @@
 // Public, browser-safe settings. Everything here ships to every visitor.
 // customerToken: SpaceAccessToken whose role may only read the published store/menu and execute the
-// customer Scripts (place-order, confirm-payment, order-status, staff-call). It cannot read or write
-// orders directly, and cannot run refund-order (admins only).
+// customer Scripts (place-order, start-checkout, confirm-payment, order-status, staff-call). It cannot
+// read or write orders directly, and cannot run refund-order (admins only).
 export const CONFIG = {
   spaceId: '__SPACE_ID__',
   cma: 'https://cma.weegloo.com',
@@ -22,6 +22,7 @@ export const CONFIG = {
   },
   scripts: {
     placeOrder: '__SCRIPT_PLACE_ORDER__',
+    startCheckout: '__SCRIPT_START_CHECKOUT__',
     orderStatus: '__SCRIPT_ORDER_STATUS__',
     staffCall: '__SCRIPT_STAFF_CALL__',
     confirmPayment: '__SCRIPT_CONFIRM_PAYMENT__',

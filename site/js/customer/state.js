@@ -211,7 +211,7 @@ export async function recoverPayments() {
 const isActive = (o) => o.status === 'new' || o.status === 'preparing';
 export const activeOrders = () => getMyOrders().filter(isActive);
 
-// A served card order can still be refunded at the counter (complaint, wrong dish…). The 10 s checks
+// A served card order can still be refunded at the counter (complaint, wrong dish…). The 20 s checks
 // cover open orders only, so recent served card orders ride along once when a screen opens or comes
 // back into view — same Script call, no extra polling.
 const RECHECK_PAID_FOR = 12 * 60 * 60e3;
@@ -239,10 +239,11 @@ export async function refreshStatuses(ids) {
 }
 
 // Status updates for this device's open orders (and its open staff call): one Script call by id, at
-// once when a screen opens (a refresh included), then every 10 s — but only while the screen is
+// once when a screen opens (a refresh included), then every 20 s — but only while the screen is
 // visible, so a locked phone or a background tab costs nothing — and for at most an hour after the
-// newest open order. Each check is a Script run, which the Organization pays for monthly.
-const WATCH_EVERY = 10e3;
+// newest open order. Each check is a Script run, which the Organization pays for monthly (10,000 on
+// the Free plan), so the interval is kept long enough for a small shop to stay within it.
+const WATCH_EVERY = 20e3;
 const WATCH_FOR = 60 * 60e3;
 export function watchOrders(onUpdate, { immediate = true } = {}) {
   let timer = null;
