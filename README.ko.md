@@ -78,29 +78,34 @@ Weegloo 마켓플레이스 앱 **작은 테이블 QR 오더**의 소스코드입
 
 ## 다른 PG로 바꾸기
 
-### 바꿀 곳
+Weegloo를 연결한 AI 에이전트에게 맡기거나, 아래 표를 보고 직접 고칩니다. 어느 쪽이든 [꼭 지킬 것](#꼭-지킬-것)을 지켜야 합니다.
 
-**서버 (Weegloo Script)** — 콘솔 → Script에서 내 Space의 Script를 고칩니다.
+### AI 에이전트로 바꾸기
 
-| Script | 지금 | 바꿀 것 |
-|---|---|---|
-| `place-order` | `prepay`일 때 `pending` 주문을 만들고 `prepay: true` 반환 | 없음. PG를 부르지 않습니다. |
-| `start-checkout` | 주문에 저장된 `total`로 Stripe Checkout 세션 생성 | Stripe 호출(`Http`) 부분을 PG에 맞게 바꿉니다. 결제창 주소를 서버에서 만드는 PG면 그 주소를 `pay.url`로 돌려주고(돌아올 주소는 지금처럼 `{ /headers/origin }`으로 만듭니다), 브라우저 SDK로 결제창을 여는 PG(토스페이먼츠 등)면 PG 호출을 빼고 주문에서 읽은 금액으로 `{ pay: { orderId, amount, orderName } }`만 돌려줍니다. |
-| `confirm-payment` | Stripe 세션 조회 후 확정 | PG의 승인·조회 API로 결제를 확인합니다. 금액은 **주문 행의 `total`**과 비교합니다. PG가 돌려준 값(예: `paymentKey`)을 받아야 하면 `payloadSchema`에 추가합니다. |
-| `refund-order` | Stripe 환불 API | PG의 취소(환불) API |
+마켓에서 설치할 때 Script 같은 리소스는 내 Space에 만들어지므로 그 자리에서 고칠 수 있지만, 웹호스팅의 사이트 파일은
+그 자리에서 고칠 수 없습니다. 그래서 이 저장소에서 사이트를 받아 고친 뒤 내 웹호스팅에 다시 올립니다.
+Weegloo를 연결한 AI 에이전트(Claude Code, Codex, Cursor 등)에게 말로 요청하면 이 일을 모두 해 줍니다.
 
-- 비밀 키는 Script의 **시크릿**(`definition.secrets`)에만 넣습니다. 지금은 `STRIPE_SECRET_KEY`(`start-checkout`, `confirm-payment`, `refund-order`)이고, 이 저장소의 파일에서는 값이 비어 있습니다. 브라우저 코드(`site/`)에 넣으면 누구나 볼 수 있습니다.
-- 주문의 `stripeSessionId`, `paymentIntentId`, `refundId` 필드(RichText)는 Script만 씁니다. PG의 결제 키를 `paymentIntentId`에 그대로 담아도 되고, 필드를 새로 추가해도 됩니다. 사이트 코드는 이 필드를 읽지 않습니다.
+1. **에이전트에 Weegloo 연결**: [Weegloo 문서 — 연결하기](https://docs.weegloo.com/ai/tools/connect)를 따라 설치하고 로그인합니다.
+   QR 오더를 설치한 Space에 관리자로 들어갈 수 있는 Weegloo 계정으로 로그인하세요.
+2. **이 저장소 받기**: `git clone https://github.com/weegloo-apps/qr-order.git`으로 받고, 그 폴더에서 에이전트를 엽니다.
+3. **요청하기**: `[PG 이름]`에 내 가게가 계약한 PG를 넣어 이렇게 말합니다.
 
-**화면 (`site/`)**
+   ```text
+   결제 시스템을 [PG 이름] 결제로 변경하여 배포해줘.
+   ```
 
-| 파일 | 고칠 곳 |
-|---|---|
-| `js/customer/views.js` | `place()`: `place-order`가 `prepay`로 답하면 `start-checkout`을 불러 받은 `pay`로 결제로 넘어가는 부분. 브라우저 SDK형 PG는 여기서 결제창을 엽니다. `stripeLocale()` / `STRIPE_LOCALES`: Stripe 결제창 언어(필요 없으면 삭제). `testCardNote()`: 테스트 카드 안내(삭제). `paidScreen()`: `/paid/{주문 id}`에서 `confirm-payment`를 부르는 부분 — PG가 돌려준 쿼리 값을 함께 넘기도록 고칩니다. |
-| `js/customer/state.js` | `confirmPayment()`, 결제 화면이 닫혀 돌아오지 못한 주문을 다음에 메뉴를 열 때 확인하는 `recoverPayments()` |
-| `js/config.js` | `TEST_CARD` 삭제 |
-| `js/i18n.js`, `i18n/*.js` | `s.t.prepayTest`, `c.test.card` 등 Stripe가 들어간 문구(영어와 나머지 아홉 언어 각각) |
-| `index.html` | 브라우저 SDK형 PG면 SDK `<script>` 태그 추가 |
+   내 사이트 주소도 함께 알려 주세요. 에이전트가 그 사이트의 `config.js`와 `index.html`의 `<head>`(제목·설명·공유 이미지)를
+   가져와 [자리표시자](#먼저-자리표시자를-내-값으로)를 채웁니다. 이 저장소의 `index.html`을 그대로 올리면 콘솔에서 바꾼 페이지 메타가
+   사라집니다. 작업할 Space를 물으면 QR 오더를 설치한 Space를 고르세요.
+4. **테스트 키로 끝까지 시험**: 에이전트가 PG의 키를 요청하면 테스트 키부터 줍니다. 손님 화면에서 주문 → 결제 → 확정,
+   사장님 화면에서 환불까지 해 보세요.
+5. **실제 키로 바꾸기**: 시험이 끝나면 PG에서 받은 실제 키로 바꿔 달라고 요청합니다. 시크릿 키는 Script 시크릿에만 들어가고
+   `site/`에는 들어가지 않아야 합니다.
+
+- 매장 설정의 통화를 PG가 받는 통화로 맞추세요.
+- 에이전트가 사이트를 배포하면 마켓에서 설치한 웹호스팅의 페이지 메타 편집 기능은 더 이상 쓸 수 없습니다([배포](#배포) 참고).
+- 에이전트가 고친 결과도 아래 [꼭 지킬 것](#꼭-지킬-것)을 지키는지 확인하세요.
 
 ### 꼭 지킬 것
 
@@ -109,29 +114,35 @@ Weegloo 마켓플레이스 앱 **작은 테이블 QR 오더**의 소스코드입
 - 이미 확정된 주문(`status`가 `pending`이 아님)은 다시 확정하지 않고, 주문 행은 `sys.version`을 붙여 고칩니다. 지금 Script의 구조를 그대로 두면 됩니다.
 - 손님 토큰의 역할(`weegloo/space-role.customer.json`)에 주문 쓰기 권한을 주지 마세요. 손님이 주문 금액이나 상태를 직접 쓸 수 있게 됩니다.
 - Script 읽기 권한이 있으면 시크릿 값이 보입니다. Script 읽기는 관리자에게만 주세요.
+- Script 하나는 문장 30개, 외부 호출(`Http`) 3개를 넘지 않게 합니다([Weegloo Free 플랜](#weegloo-free-플랜) 참고). 넘으면 저장이
+  거절됩니다. `place-order`와 `confirm-payment`는 지금 29개라, PG 호출이 늘면 기존 확인을 한 조건으로 합쳐 자리를 만들어야 합니다.
+- Script는 새로 만들지 말고 내 Space에 있는 것을 그 자리에서 고칩니다. 새로 만들면 id가 바뀌어 `config.js`와 손님 역할도 고쳐야 합니다.
 - 실제 결제를 받기 전에 PG의 테스트 키로 주문 → 결제 → 확정 → 환불까지 끝까지 시험하세요.
 
-### 예: 토스페이먼츠
+### 직접 바꾸기
 
-토스페이먼츠는 브라우저 SDK로 결제창을 열고, 돌아온 뒤 서버가 **승인 API**를 불러야 결제가 끝나는 방식입니다.
-정확한 API와 키는 [토스페이먼츠 개발자센터](https://docs.tosspayments.com)를 따르세요.
+**서버 (Weegloo Script)** — 콘솔 → Script에서 내 Space의 Script를 고칩니다.
 
-1. **`start-checkout`**: Stripe `Http`와 세션 id를 저장하는 부분을 빼고, 그 앞의 확인은 그대로 둔 채
-   `{ ok: true, pay: { orderId: <주문 id>, amount: <주문의 total>, orderName: <매장 이름 · 테이블> } }`를 돌려줍니다.
-   `place-order`는 고치지 않습니다. Weegloo 주문 id(영문·숫자 30자)는 토스의 `orderId` 규칙(6–64자, 영문·숫자·`-`·`_`)에 맞습니다.
-2. **화면**: `index.html`에 토스 SDK를 추가하고, `place()`에서 그 `pay`로 결제를 요청합니다.
-   `successUrl`은 `${location.origin}/paid/${orderId}`, `failUrl`은 `${location.origin}/cart?pay=cancel&order=${orderId}`로 둡니다.
-3. **돌아온 화면**: 토스는 `successUrl`에 `paymentKey`, `orderId`, `amount`를 붙여 돌려보냅니다. `paidScreen()`이
-   `confirm-payment`에 `{ orderId, paymentKey }`를 넘기게 하고, `payloadSchema`에도 `paymentKey`를 추가합니다.
-   쿼리의 `amount`는 서버에서 쓰지 않습니다.
-4. **`confirm-payment`**: Stripe 조회 대신
-   - `POST https://api.tosspayments.com/v1/payments/confirm`(본문 `paymentKey`, `orderId`, `amount` = **주문의 `total`**)로 승인하고,
-   - `GET https://api.tosspayments.com/v1/payments/{paymentKey}`로 다시 조회해 `status: DONE`, `orderId`, `totalAmount`가 주문과 맞을 때만 확정합니다. 승인 응답이 중간에 끊겨도 조회 결과로 판단할 수 있습니다. `IN_PROGRESS`면 잠시 뒤 다시 확인하도록 `503`을 돌려줍니다.
-   - 인증 헤더는 `Authorization: Basic <base64("시크릿키:")>`입니다(끝의 `:` 포함). Script에서는 base64를 만들 수 없으니 미리 인코딩한 값을 시크릿(예: `TOSS_BASIC_AUTH`)에 넣고 `Basic { /secrets/TOSS_BASIC_AUTH }`로 씁니다.
-   - 확정할 때 `paymentKey`를 주문에 저장합니다(환불에 필요).
-   - 토스는 결제 요청 후 **10분 안에** 승인해야 합니다. 결제 화면이 닫혀 돌아오지 못한 주문은 `paymentKey`가 없어 나중에 승인할 수 없고, 승인되지 않은 결제는 청구되지 않습니다.
-5. **`refund-order`**: `POST https://api.tosspayments.com/v1/payments/{paymentKey}/cancel`(본문 `cancelReason`)로 취소합니다. 중복 취소를 막으려면 `Idempotency-Key` 헤더를 붙입니다.
-6. 토스페이먼츠는 원화(KRW) 결제입니다. 매장 설정의 통화를 KRW로 두세요.
+| Script | 지금 | 바꿀 것 |
+|---|---|---|
+| `place-order` | `prepay`일 때 `pending` 주문을 만들고 `prepay: true` 반환 | 없음. PG를 부르지 않습니다. |
+| `start-checkout` | 주문에 저장된 `total`로 Stripe Checkout 세션 생성 | Stripe 호출(`Http`) 부분을 PG에 맞게 바꿉니다. 결제창 주소를 서버에서 만드는 PG면 그 주소를 `pay.url`로 돌려주고(돌아올 주소는 지금처럼 `{ /headers/origin }`으로 만듭니다), 브라우저 SDK로 결제창을 여는 PG면 PG 호출을 빼고 주문에서 읽은 금액으로 `{ pay: { orderId, amount, orderName } }`만 돌려줍니다. |
+| `confirm-payment` | Stripe 세션 조회 후 확정 | PG의 승인·조회 API로 결제를 확인합니다. 금액은 **주문 행의 `total`**과 비교합니다. PG가 돌려준 값(결제 키 등)을 받아야 하면 `payloadSchema`에 추가합니다. 승인 API를 따로 불러야 하는 PG면 승인한 뒤 조회한 결과로 판단합니다. 승인 응답이 중간에 끊겨도 판단할 수 있습니다. |
+| `refund-order` | Stripe 환불 API | PG의 취소(환불) API |
+
+- 비밀 키는 Script의 **시크릿**(`definition.secrets`)에만 넣습니다. 지금은 `STRIPE_SECRET_KEY`(`start-checkout`, `confirm-payment`, `refund-order`)이고, 이 저장소의 파일에서는 값이 비어 있습니다. 브라우저 코드(`site/`)에 넣으면 누구나 볼 수 있습니다.
+- Script에서는 base64를 만들 수 없습니다. Basic 인증을 쓰는 PG면 미리 인코딩한 값을 시크릿에 넣고 `Basic { /secrets/<키 이름> }`으로 씁니다.
+- 주문의 `stripeSessionId`, `paymentIntentId`, `refundId` 필드(RichText)는 Script만 씁니다. 사이트 코드는 이 필드를 읽지 않습니다. PG의 결제 키는 `paymentIntentId`에 담으세요. `refund-order`가 이 필드로 결제된 주문인지 확인하므로, 새 필드에 담으면 그 확인도 고쳐야 합니다.
+
+**화면 (`site/`)**
+
+| 파일 | 고칠 곳 |
+|---|---|
+| `js/customer/views.js` | `place()`: `place-order`가 `prepay`로 답하면 `start-checkout`을 불러 받은 `pay`로 결제로 넘어가는 부분. 브라우저 SDK형 PG는 여기서 결제창을 엽니다(결제 UI를 페이지 안에 그리는 방식이면 장바구니 화면에 그 자리가 필요합니다). `stripeLocale()` / `STRIPE_LOCALES`: Stripe 결제창 언어(필요 없으면 삭제). `testCardNote()`: 테스트 카드 안내(삭제). `paidScreen()`: `/paid/{주문 id}`에서 `confirm-payment`를 부르는 부분 — PG가 돌려준 쿼리 값을 함께 넘기도록 고칩니다. |
+| `js/customer/state.js` | `confirmPayment()`, 결제 화면이 닫혀 돌아오지 못한 주문을 다음에 메뉴를 열 때 확인하는 `recoverPayments()`. 돌아온 주소의 값(결제 키 등)이 있어야 확인되는 PG면 `recoverPayments()`는 성공할 수 없으니 부르지 않게 합니다. 그대로 두면 Script 실행 횟수만 씁니다. |
+| `js/config.js` | `TEST_CARD` 삭제 |
+| `js/i18n.js`, `i18n/*.js` | `s.t.prepayTest`, `c.test.card` 등 Stripe가 들어간 문구(영어와 나머지 아홉 언어 각각) |
+| `index.html` | 브라우저 SDK형 PG면 SDK `<script>` 태그 추가 |
 
 ### Stripe를 그대로 쓰는 경우
 

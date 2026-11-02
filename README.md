@@ -79,29 +79,34 @@ With **Pay when ordering** off, `place-order` stores the order as `new` with its
 
 ## Switching to another payment provider
 
-### What to change
+Hand it to an AI agent connected to Weegloo, or change it yourself using the tables below. Either way, keep the [Rules to keep](#rules-to-keep).
 
-**Server (Weegloo Scripts)** — edit your Space's Scripts in the console under Script.
+### With an AI agent
 
-| Script | Now | Change |
-|---|---|---|
-| `place-order` | With `prepay`, creates a `pending` order and returns `prepay: true` | Nothing: it never calls the provider. |
-| `start-checkout` | Creates a Stripe Checkout session for the order's stored `total` | Replace the Stripe call (`Http`). For a provider whose payment page URL is created on the server, return that URL as `pay.url` (build its return addresses from `{ /headers/origin }`, as now). For a provider that opens its payment window with a browser SDK (Toss Payments and others), drop the provider call and return just `{ pay: { orderId, amount, orderName } }`, with the amount taken from the order. |
-| `confirm-payment` | Looks up the Stripe session, then confirms | Check the payment with the provider's approval/lookup API. Compare the amount with **the order's `total`**. If you need values the provider returns (e.g. `paymentKey`), add them to `payloadSchema`. |
-| `refund-order` | Stripe refunds API | The provider's cancel (refund) API |
+Installing from the Marketplace creates resources such as Scripts in your Space, so they can be changed where they are, but
+the web hosting's site files cannot. So you take the site from this repository, change it and upload it to your web hosting
+again. An AI agent connected to Weegloo (Claude Code, Codex, Cursor and others) does all of this from a request in plain words.
 
-- Keep the secret key only in the Script's **secrets** (`definition.secrets`). It is `STRIPE_SECRET_KEY` today (in `start-checkout`, `confirm-payment` and `refund-order`), and its value is empty in this repository's files. Anything in the browser code (`site/`) can be read by anyone.
-- The order's `stripeSessionId`, `paymentIntentId` and `refundId` fields (RichText) are used only by the Scripts. You can keep the provider's payment key in `paymentIntentId` or add a new field. The site code does not read these fields.
+1. **Connect Weegloo to your agent**: install and sign in as described in [Weegloo docs — Connecting](https://docs.weegloo.com/ai/tools/connect).
+   Sign in with a Weegloo account that is an admin of the Space where you installed QR Order.
+2. **Get this repository**: clone it with `git clone https://github.com/weegloo-apps/qr-order.git` and open your agent in that folder.
+3. **Ask**: put the payment provider your shop has a contract with in place of `[provider]`, and say
 
-**Screens (`site/`)**
+   ```text
+   Switch the payment system to [provider] and deploy it.
+   ```
 
-| File | Where |
-|---|---|
-| `js/customer/views.js` | `place()`: where a `prepay` reply from `place-order` calls `start-checkout` and moves on to its `pay`; a browser-SDK provider opens its payment window here. `stripeLocale()` / `STRIPE_LOCALES`: Stripe's checkout language (delete if unused). `testCardNote()`: the test card notice (delete). `paidScreen()`: calls `confirm-payment` on `/paid/{order id}` — make it pass the query values the provider returns. |
-| `js/customer/state.js` | `confirmPayment()`, and `recoverPayments()`, which checks orders whose return page never loaded the next time the menu opens |
-| `js/config.js` | Delete `TEST_CARD` |
-| `js/i18n.js`, `i18n/*.js` | Strings that mention Stripe, such as `s.t.prepayTest` and `c.test.card`, in English and each of the other nine languages |
-| `index.html` | Add the provider's SDK `<script>` tag if it uses a browser SDK |
+   Give it your site's address too. The agent takes that site's `config.js` and the `<head>` of its `index.html` (title, description,
+   share image) to fill in the [placeholders](#first-fill-in-the-placeholders). Uploading this repository's `index.html` as is drops
+   the page metadata you changed in the console. When it asks which Space to work in, pick the Space where you installed QR Order.
+4. **Test end to end on test keys**: when the agent asks for the provider's keys, give it test keys first. Order, pay and confirm
+   on the guest screen, then refund on the admin screen.
+5. **Switch to live keys**: once the test passes, ask the agent to switch to the live keys from your provider. The secret key
+   belongs only in a Script secret, never in `site/`.
+
+- Set the store currency to one your provider accepts.
+- Once the agent deploys the site, you can no longer edit page metadata in the console for the web hosting installed from the Marketplace (see [Deploying](#deploying)).
+- Check that what the agent changed keeps the [Rules to keep](#rules-to-keep) below.
 
 ### Rules to keep
 
@@ -110,29 +115,35 @@ With **Pay when ordering** off, `place-order` stores the order as `new` with its
 - Don't confirm an order twice (anything not `pending` is returned as is), and patch the order with its `sys.version`. Keeping the current Script structure does this.
 - Don't give the guest token's role (`weegloo/space-role.customer.json`) any write access to orders, or guests can write their own amount or status.
 - Anyone who can read a Script can see its secret values. Give Script read access to admins only.
+- Keep each Script within 30 statements and 3 external calls (`Http`) (see [Weegloo Free plan](#weegloo-free-plan)). Saving a larger
+  one is refused. `place-order` and `confirm-payment` are at 29 now, so if the provider needs more calls, merge existing checks into one condition to make room.
+- Change the Scripts already in your Space where they are; don't create new ones. A new Script has a new id, so `config.js` and the guest role would have to change too.
 - Before taking real payments, test the whole path — order, pay, confirm, refund — with the provider's test keys.
 
-### Example: Toss Payments
+### Changing it yourself
 
-Toss Payments opens the payment window with a browser SDK, and the payment completes only when the server
-calls the **confirm API** after the guest returns. Follow the [Toss Payments developer docs](https://docs.tosspayments.com) for the exact API and keys.
+**Server (Weegloo Scripts)** — edit your Space's Scripts in the console under Script.
 
-1. **`start-checkout`**: remove the Stripe `Http` and the patch that stores its session id, keep the checks before them
-   and return `{ ok: true, pay: { orderId: <order id>, amount: <the order's total>, orderName: <store name · table> } }`.
-   `place-order` stays as it is. A Weegloo order id (30 letters and digits) fits Toss's `orderId` rule (6–64 characters
-   of letters, digits, `-`, `_`).
-2. **Screen**: add the Toss SDK to `index.html` and request the payment from that `pay` in `place()`, with
-   `successUrl` = `${location.origin}/paid/${orderId}` and `failUrl` = `${location.origin}/cart?pay=cancel&order=${orderId}`.
-3. **Return screen**: Toss appends `paymentKey`, `orderId` and `amount` to `successUrl`. Make `paidScreen()` pass
-   `{ orderId, paymentKey }` to `confirm-payment`, and add `paymentKey` to its `payloadSchema`. The server ignores the query's `amount`.
-4. **`confirm-payment`**: instead of the Stripe lookup,
-   - approve with `POST https://api.tosspayments.com/v1/payments/confirm` (body `paymentKey`, `orderId`, `amount` = **the order's `total`**), then
-   - look it up again with `GET https://api.tosspayments.com/v1/payments/{paymentKey}` and confirm only when `status: DONE`, `orderId` and `totalAmount` match the order. Deciding from the lookup also covers an approval whose reply was lost. While it reads `IN_PROGRESS`, return `503` so the screen checks again shortly.
-   - The auth header is `Authorization: Basic <base64("secretKey:")>` (with the trailing `:`). A Script cannot base64-encode, so put the pre-encoded value in a secret (e.g. `TOSS_BASIC_AUTH`) and send `Basic { /secrets/TOSS_BASIC_AUTH }`.
-   - Store the `paymentKey` on the order when confirming (refunds need it).
-   - Toss requires approval **within 10 minutes** of the payment request. An order whose return page never loaded has no `paymentKey`, so it cannot be approved later; an unapproved payment is not charged.
-5. **`refund-order`**: cancel with `POST https://api.tosspayments.com/v1/payments/{paymentKey}/cancel` (body `cancelReason`), with an `Idempotency-Key` header against double cancels.
-6. Toss Payments charges in Korean won. Keep the store currency at KRW.
+| Script | Now | Change |
+|---|---|---|
+| `place-order` | With `prepay`, creates a `pending` order and returns `prepay: true` | Nothing: it never calls the provider. |
+| `start-checkout` | Creates a Stripe Checkout session for the order's stored `total` | Replace the Stripe call (`Http`). For a provider whose payment page URL is created on the server, return that URL as `pay.url` (build its return addresses from `{ /headers/origin }`, as now). For a provider that opens its payment window with a browser SDK, drop the provider call and return just `{ pay: { orderId, amount, orderName } }`, with the amount taken from the order. |
+| `confirm-payment` | Looks up the Stripe session, then confirms | Check the payment with the provider's approval/lookup API. Compare the amount with **the order's `total`**. If you need values the provider returns (such as a payment key), add them to `payloadSchema`. For a provider that needs a separate approval call, approve, then decide from a lookup; that also covers an approval whose reply was lost. |
+| `refund-order` | Stripe refunds API | The provider's cancel (refund) API |
+
+- Keep the secret key only in the Script's **secrets** (`definition.secrets`). It is `STRIPE_SECRET_KEY` today (in `start-checkout`, `confirm-payment` and `refund-order`), and its value is empty in this repository's files. Anything in the browser code (`site/`) can be read by anyone.
+- A Script cannot base64-encode. For a provider that uses Basic auth, put the pre-encoded value in a secret and send `Basic { /secrets/<key name> }`.
+- The order's `stripeSessionId`, `paymentIntentId` and `refundId` fields (RichText) are used only by the Scripts. The site code does not read these fields. Keep the provider's payment key in `paymentIntentId`: `refund-order` checks that field to tell a paid order, so a new field means changing that check too.
+
+**Screens (`site/`)**
+
+| File | Where |
+|---|---|
+| `js/customer/views.js` | `place()`: where a `prepay` reply from `place-order` calls `start-checkout` and moves on to its `pay`; a browser-SDK provider opens its payment window here (one that draws its payment UI inside the page needs a place for it on the cart screen). `stripeLocale()` / `STRIPE_LOCALES`: Stripe's checkout language (delete if unused). `testCardNote()`: the test card notice (delete). `paidScreen()`: calls `confirm-payment` on `/paid/{order id}` — make it pass the query values the provider returns. |
+| `js/customer/state.js` | `confirmPayment()`, and `recoverPayments()`, which checks orders whose return page never loaded the next time the menu opens. If the provider can only confirm with values from the return address (such as a payment key), `recoverPayments()` can never succeed, so stop calling it; left in, it only spends Script executions. |
+| `js/config.js` | Delete `TEST_CARD` |
+| `js/i18n.js`, `i18n/*.js` | Strings that mention Stripe, such as `s.t.prepayTest` and `c.test.card`, in English and each of the other nine languages |
+| `index.html` | Add the provider's SDK `<script>` tag if it uses a browser SDK |
 
 ### Staying on Stripe
 
