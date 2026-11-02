@@ -79,78 +79,71 @@ With **Pay when ordering** off, `place-order` stores the order as `new` with its
 
 ## Switching to another payment provider
 
-Hand it to an AI agent connected to Weegloo, or change it yourself using the tables below. Either way, keep the [Rules to keep](#rules-to-keep).
+To take real card payments, switch payments to the payment provider (PG) your shop has a contract with. You don't edit any
+code yourself: you ask an AI agent in plain words. The agent changes the payment part using this repository's code, updates
+the server functions (Scripts) in your Space and uploads the site to your web hosting again. The site files installed from
+the Marketplace cannot be changed where they are, which is why the agent works from this repository's code.
 
-### With an AI agent
+### What you need
 
-Installing from the Marketplace creates resources such as Scripts in your Space, so they can be changed where they are, but
-the web hosting's site files cannot. So you take the site from this repository, change it and upload it to your web hosting
-again. An AI agent connected to Weegloo (Claude Code, Codex, Cursor and others) does all of this from a request in plain words.
+- **A provider contract and keys**: sign up with the provider and get both **test keys** and **live keys** from its admin
+  screen. Keys usually come in pairs: one that is safe to show (the client key) and a secret one that must never be shown (the
+  secret key).
+- **An AI agent**: connect Weegloo to an AI agent such as Claude Code, Codex or Cursor as described in
+  [Weegloo docs — Connecting](https://docs.weegloo.com/ai/tools/connect). Sign in with a Weegloo account that is an admin of the
+  Space where you installed QR Order.
+- **Your site's address**: the address guests reach from the table QR (e.g. `https://myshop.weegloo.app`).
 
-1. **Connect Weegloo to your agent**: install and sign in as described in [Weegloo docs — Connecting](https://docs.weegloo.com/ai/tools/connect).
-   Sign in with a Weegloo account that is an admin of the Space where you installed QR Order.
-2. **Get this repository**: clone it with `git clone https://github.com/weegloo-apps/qr-order.git` and open your agent in that folder.
-3. **Ask**: put the payment provider your shop has a contract with in place of `[provider]`, and say
+### Steps
+
+1. **Ask first whether it can be done**: providers connect in different ways, so some cannot be used with this app, and some
+   need a paid Weegloo plan (see [Weegloo Free plan](#weegloo-free-plan)). Ask first:
 
    ```text
-   Switch the payment system to [provider] and deploy it.
+   Check whether the payments in https://github.com/weegloo-apps/qr-order can be switched to [provider].
    ```
 
-   Give it your site's address too. The agent takes that site's `config.js` and the `<head>` of its `index.html` (title, description,
-   share image) to fill in the [placeholders](#first-fill-in-the-placeholders). Uploading this repository's `index.html` as is drops
-   the page metadata you changed in the console. When it asks which Space to work in, pick the Space where you installed QR Order.
-4. **Test end to end on test keys**: when the agent asks for the provider's keys, give it test keys first. Order, pay and confirm
-   on the guest screen, then refund on the admin screen.
-5. **Switch to live keys**: once the test passes, ask the agent to switch to the live keys from your provider. The secret key
-   belongs only in a Script secret, never in `site/`.
+   If the answer is no, ask the provider whether it offers another way to connect.
+2. **Ask for the switch**:
+
+   ```text
+   Download https://github.com/weegloo-apps/qr-order, switch its payment system to [provider] and deploy it.
+   My site's address is [your site address].
+   ```
+
+   When it asks which Space to work in, pick the Space where you installed QR Order. When it asks for keys, give it the
+   **test keys** first.
+3. **Try a test payment**: once it is deployed, scan a table QR with your phone and check the following. Test keys never move
+   real money.
+   - Paying shows the order complete screen and an order number.
+   - The order shows up on the owner screen (`/admin`) and the alert sounds.
+   - Cancelling in the payment window brings you back to the cart, and no order shows up on the owner screen.
+   - Refunding the order on the owner screen shows it as cancelled in the provider's admin screen too.
+   - The amount in the provider's admin screen matches the order amount.
+
+   If anything looks wrong, tell the agent what you saw and it will fix it.
+4. **Switch to live keys**: ask "Switch to the live keys and deploy it" and give it the live keys. Then make one small real
+   payment and refund it.
+5. **Final checks**: ask the agent these two things.
+   - "Check that the secret key is not in the site files." Anyone can read the site files, so the secret key belongs only in
+     the server functions (Scripts).
+   - "Check that the payment amount and whether it was paid are confirmed on the server, directly with the provider." If the
+     values the guest screen sends are trusted as they are, the amount can be faked.
+
+### Good to know when switching
 
 - Set the store currency to one your provider accepts.
-- Once the agent deploys the site, you can no longer edit page metadata in the console for the web hosting installed from the Marketplace (see [Deploying](#deploying)).
-- Check that what the agent changed keeps the [Rules to keep](#rules-to-keep) below.
-
-### Rules to keep
-
-- Trust only the `total` that `place-order` computed and stored on the order. Never compare against an amount from the screen or the return address.
-- Confirm an order only from what `confirm-payment` learned from the provider's API directly.
-- Don't confirm an order twice (anything not `pending` is returned as is), and patch the order with its `sys.version`. Keeping the current Script structure does this.
-- Don't give the guest token's role (`weegloo/space-role.customer.json`) any write access to orders, or guests can write their own amount or status.
-- Anyone who can read a Script can see its secret values. Give Script read access to admins only.
-- Keep each Script within 30 statements and 3 external calls (`Http`) (see [Weegloo Free plan](#weegloo-free-plan)). Saving a larger
-  one is refused. `place-order` and `confirm-payment` are at 29 now, so if the provider needs more calls, merge existing checks into one condition to make room.
-- Change the Scripts already in your Space where they are; don't create new ones. A new Script has a new id, so `config.js` and the guest role would have to change too.
-- Before taking real payments, test the whole path — order, pay, confirm, refund — with the provider's test keys.
-
-### Changing it yourself
-
-**Server (Weegloo Scripts)** — edit your Space's Scripts in the console under Script.
-
-| Script | Now | Change |
-|---|---|---|
-| `place-order` | With `prepay`, creates a `pending` order and returns `prepay: true` | Nothing: it never calls the provider. |
-| `start-checkout` | Creates a Stripe Checkout session for the order's stored `total` | Replace the Stripe call (`Http`). For a provider whose payment page URL is created on the server, return that URL as `pay.url` (build its return addresses from `{ /headers/origin }`, as now). For a provider that opens its payment window with a browser SDK, drop the provider call and return just `{ pay: { orderId, amount, orderName } }`, with the amount taken from the order. |
-| `confirm-payment` | Looks up the Stripe session, then confirms | Check the payment with the provider's approval/lookup API. Compare the amount with **the order's `total`**. If you need values the provider returns (such as a payment key), add them to `payloadSchema`. For a provider that needs a separate approval call, approve, then decide from a lookup; that also covers an approval whose reply was lost. |
-| `refund-order` | Stripe refunds API | The provider's cancel (refund) API |
-
-- Keep the secret key only in the Script's **secrets** (`definition.secrets`). It is `STRIPE_SECRET_KEY` today (in `start-checkout`, `confirm-payment` and `refund-order`), and its value is empty in this repository's files. Anything in the browser code (`site/`) can be read by anyone.
-- A Script cannot base64-encode. For a provider that uses Basic auth, put the pre-encoded value in a secret and send `Basic { /secrets/<key name> }`.
-- The order's `stripeSessionId`, `paymentIntentId` and `refundId` fields (RichText) are used only by the Scripts. The site code does not read these fields. Keep the provider's payment key in `paymentIntentId`: `refund-order` checks that field to tell a paid order, so a new field means changing that check too.
-
-**Screens (`site/`)**
-
-| File | Where |
-|---|---|
-| `js/customer/views.js` | `place()`: where a `prepay` reply from `place-order` calls `start-checkout` and moves on to its `pay`; a browser-SDK provider opens its payment window here (one that draws its payment UI inside the page needs a place for it on the cart screen). `stripeLocale()` / `STRIPE_LOCALES`: Stripe's checkout language (delete if unused). `testCardNote()`: the test card notice (delete). `paidScreen()`: calls `confirm-payment` on `/paid/{order id}` — make it pass the query values the provider returns. |
-| `js/customer/state.js` | `confirmPayment()`, and `recoverPayments()`, which checks orders whose return page never loaded the next time the menu opens. If the provider can only confirm with values from the return address (such as a payment key), `recoverPayments()` can never succeed, so stop calling it; left in, it only spends Script executions. |
-| `js/config.js` | Delete `TEST_CARD` |
-| `js/i18n.js`, `i18n/*.js` | Strings that mention Stripe, such as `s.t.prepayTest` and `c.test.card`, in English and each of the other nine languages |
-| `index.html` | Add the provider's SDK `<script>` tag if it uses a browser SDK |
+- Once the site is uploaded again, you can no longer change the site's title, description and share image in the console.
+  The agent carries the current values over to the new site (if you gave it your site's address), and for later changes you
+  ask the agent too.
 
 ### Staying on Stripe
 
-Put your own Stripe secret key (a restricted `rk_live_…` key is recommended) into the `STRIPE_SECRET_KEY` secret
-of the three Scripts that call Stripe (`start-checkout`, `confirm-payment`, `refund-order`), delete `TEST_CARD` and the test card notice (`testCardNote()`), and go through Stripe's
-go-live checklist. To catch guests who close the page right after paying, add a Script that receives Stripe's
-`checkout.session.completed` webhook.
+If you have a Stripe account, you can take real payments on it without switching providers. Ask the agent "Switch payments to
+real payments on my Stripe account and deploy it" and give it your Stripe secret key. Creating a restricted key (`rk_live_…`)
+with fewer permissions in the Stripe dashboard is safer. To have orders confirmed even when a guest closes the page right after
+paying, also ask "Receive Stripe's webhook too"; the agent tells you what to do in the Stripe dashboard. Then make a small
+payment and refund and run the final checks, as in steps 4 and 5 above.
 
 ## Weegloo Free plan
 
