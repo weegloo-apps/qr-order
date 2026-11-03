@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'बस मेनू देखें',
   'c.closed.info': 'स्टोर की जानकारी देखें',
   'c.closed.myOrders': 'मेरे ऑर्डर देखें',
+  'c.setup.title': 'अभी ऑर्डर नहीं लिए जा रहे हैं',
+  'c.setup.body': 'स्टोर की सेटिंग अभी पूरी नहीं हुई है। कृपया काउंटर पर ऑर्डर करें।',
 
   // Admin: shell & login
   'nav.dashboard': 'डैशबोर्ड',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'मुझे साइन इन रखें',
   'a.login.help': 'सिर्फ़ इस स्टोर (Weegloo Space) में आमंत्रित खाते ही साइन इन कर सकते हैं। अगर साइन-इन विंडो नहीं खुलती, तो इस साइट के लिए पॉप-अप की अनुमति दें।',
   'a.login.back': 'ग्राहक स्क्रीन पर जाएँ',
+  'a.setup.title': 'इस Space की डिफ़ॉल्ट भाषा English करें',
+  'a.setup.body': 'QR Order कीमतें, खुलने का समय और ऑर्डर अंग्रेज़ी (en-US) में सहेजता है। इस Space की डिफ़ॉल्ट भाषा ({lang}) अंग्रेज़ी नहीं है, इसलिए ग्राहक ऑर्डर नहीं कर सकते और यहाँ किए गए बदलाव गलत जगह सहेजे जाएँगे।',
+  'a.setup.step1': 'Weegloo कंसोल में इस Space की सेटिंग खोलें और Locales पर जाएँ।',
+  'a.setup.step2': 'English (United States) खोलें, “डिफ़ॉल्ट Locale के रूप में सेट करें” चुनें और सहेजें।',
+  'a.setup.step3': 'अपनी दूसरी भाषाएँ (जैसे {lang}) खोलें और उनकी Fallback Locale English (United States) रखें, ताकि बिना अनुवाद वाला टेक्स्ट भी दिखे।',
+  'a.setup.step4': 'यहाँ लौटें और “फिर से जाँचें” दबाएँ।',
+  'a.setup.recheck': 'फिर से जाँचें',
   'a.adminTag': 'एडमिन',
   'a.adminNav': 'एडमिन मेनू',
   'a.customerView': 'ग्राहक स्क्रीन',

@@ -532,6 +532,7 @@ select.input { padding: 0 10px; }
 .login-btn { min-height: 52px; border: 0; border-radius: 12px; background: var(--accent); color: #FFFFFF; font-size: 16px; font-weight: 700; }
 .login-help { font-size: 13px; line-height: 1.6; color: var(--muted); }
 .login-back { align-self: center; font-size: 13px; color: #444444; }
+.setup-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.6; }
 .form-error { padding: 12px 14px; border-radius: 12px; background: #FEF2F2; color: #B91C1C; font-size: 13px; line-height: 1.5; }
 
 /* QR cards */

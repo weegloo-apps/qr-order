@@ -94,6 +94,12 @@ export const getLocales = () => locales;
 export const defaultLocale = () => (locales.find((l) => l.default) || locales[0]).code;
 export const contentLocale = () => current;
 
+// The order Scripts read and write every value that is not translated (prices, opening hours, orders)
+// under this locale, so it has to be the Space's default locale. An install into a Space whose default
+// is another locale keeps that default, and there no guest can order until the owner switches it.
+export const DATA_LOCALE = 'en-US';
+export const localeReady = () => defaultLocale() === DATA_LOCALE;
+
 // Switches once that language's UI text has loaded; the newest pick wins if several overlap.
 let switches = 0;
 export async function setLocale(code) {
@@ -392,6 +398,8 @@ const EN = {
   'c.closed.browse': 'Just browse the menu',
   'c.closed.info': 'See store info',
   'c.closed.myOrders': 'See my orders',
+  'c.setup.title': "We're not taking orders yet",
+  'c.setup.body': 'This store is still being set up. Please order at the counter.',
 
   // Admin: shell & login
   'nav.dashboard': 'Dashboard',
@@ -417,6 +425,13 @@ const EN = {
   'a.login.keep': 'Keep me signed in',
   'a.login.help': "Only accounts invited to this store (Weegloo Space) can sign in. If the sign-in window doesn't open, allow pop-ups for this site.",
   'a.login.back': 'Go to the customer screen',
+  'a.setup.title': 'Make English the default language of this Space',
+  'a.setup.body': "QR Order keeps prices, opening hours and orders in English (en-US). This Space's default language ({lang}) is not English, so guests can't order and changes made here would be saved in the wrong place.",
+  'a.setup.step1': "In the Weegloo console, open this Space's settings and go to Locales.",
+  'a.setup.step2': 'Open English (United States), tick “Set as default locale” and save.',
+  'a.setup.step3': "Open your other languages (for example {lang}) and set their fallback locale to English (United States), so text you haven't translated still shows.",
+  'a.setup.step4': 'Come back here and press “Check again”.',
+  'a.setup.recheck': 'Check again',
   'a.adminTag': 'Admin',
   'a.adminNav': 'Admin menu',
   'a.customerView': 'Customer view',

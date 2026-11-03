@@ -202,6 +202,8 @@ export default {
   'c.closed.browse': '메뉴만 둘러보기',
   'c.closed.info': '가게 정보 보기',
   'c.closed.myOrders': '내 주문 보기',
+  'c.setup.title': '아직 주문을 받을 준비가 안 됐어요',
+  'c.setup.body': '매장 설정이 아직 끝나지 않았어요. 주문은 카운터에 말씀해 주세요.',
 
   // Admin: shell & login
   'nav.dashboard': '대시보드',
@@ -227,6 +229,13 @@ export default {
   'a.login.keep': '로그인 유지',
   'a.login.help': '이 매장(Weegloo Space)에 초대된 계정만 들어올 수 있어요. 로그인 창이 열리지 않으면 팝업 차단을 해제해 주세요.',
   'a.login.back': '손님 화면으로',
+  'a.setup.title': 'English를 이 Space의 기본 언어로 바꿔 주세요',
+  'a.setup.body': 'QR 주문은 가격, 영업 시간, 주문을 영어(en-US) 칸에 저장해요. 이 Space의 기본 언어({lang})가 영어가 아니어서 손님이 주문할 수 없고, 여기서 바꾼 내용도 엉뚱한 칸에 저장돼요.',
+  'a.setup.step1': 'Weegloo 콘솔에서 이 Space의 설정을 열고 Locale 관리로 가세요.',
+  'a.setup.step2': 'English (United States)를 눌러 「기본 Locale로 설정」을 체크하고 저장하세요.',
+  'a.setup.step3': '다른 언어(예: {lang})를 눌러 Fallback Locale을 English (United States)로 정하세요. 번역하지 않은 문구도 화면에 보이게 돼요.',
+  'a.setup.step4': '이 화면으로 돌아와 「다시 확인」을 누르세요.',
+  'a.setup.recheck': '다시 확인',
   'a.adminTag': '관리자',
   'a.adminNav': '관리 메뉴',
   'a.customerView': '손님 화면',

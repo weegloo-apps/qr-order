@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'Só ver o cardápio',
   'c.closed.info': 'Ver informações da loja',
   'c.closed.myOrders': 'Ver meus pedidos',
+  'c.setup.title': 'Ainda não é possível fazer pedidos',
+  'c.setup.body': 'A loja ainda está sendo configurada. Faça o pedido no balcão, por favor.',
 
   // Admin: shell & login
   'nav.dashboard': 'Painel',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'Manter conectado',
   'a.login.help': 'Só contas convidadas para esta loja (Weegloo Space) podem entrar. Se a janela de login não abrir, permita pop-ups para este site.',
   'a.login.back': 'Ir para a tela do cliente',
+  'a.setup.title': 'Defina o inglês como idioma padrão deste Space',
+  'a.setup.body': 'O QR Order guarda preços, horários e pedidos em inglês (en-US). O idioma padrão deste Space ({lang}) não é o inglês, então os clientes não conseguem pedir e as alterações feitas aqui seriam salvas no lugar errado.',
+  'a.setup.step1': 'No console do Weegloo, abra as configurações deste Space e vá em Locales.',
+  'a.setup.step2': 'Abra English (United States), marque “Definir como Locale padrão” e salve.',
+  'a.setup.step3': 'Abra os outros idiomas (por exemplo {lang}) e defina English (United States) como Locale de fallback, para que textos não traduzidos também apareçam.',
+  'a.setup.step4': 'Volte aqui e toque em “Verificar de novo”.',
+  'a.setup.recheck': 'Verificar de novo',
   'a.adminTag': 'Admin',
   'a.adminNav': 'Menu de administração',
   'a.customerView': 'Tela do cliente',

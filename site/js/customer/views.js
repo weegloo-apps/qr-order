@@ -2,7 +2,7 @@ import { CONFIG, CALL_REASONS, TEST_CARD } from '/js/config.js';
 import { runScript } from '/js/api.js';
 import { goBack, navigate, onLeave } from '/js/main.js';
 import { WEEK_ORDER, hoursSummary, storeStatus } from '/js/hours.js';
-import { badgeLabel, lbl, payLabel, t, tr, uiTag } from '/js/i18n.js';
+import { badgeLabel, lbl, localeReady, payLabel, t, tr, uiTag } from '/js/i18n.js';
 import { langSwitcher } from '/js/lang-ui.js';
 import { ampm, dayShort, h, hm, icon, poweredBy, tableLabel, toMs, toast, typeLabel, money, fill } from '/js/util.js';
 import {
@@ -20,6 +20,9 @@ export async function renderCustomer(app, path, isCurrent) {
     path = '/';
   }
   document.body.dataset.area = 'customer';
+  // Prices and opening hours read empty and every order Script write is refused while the Space's
+  // default locale is not DATA_LOCALE, so say the store is not ready instead of "closed" at 0 won.
+  if (!localeReady()) { app.replaceChildren(setupScreen()); return; }
   if (!data.store) app.replaceChildren(h('div', { class: 'center-msg' }, h('p', { class: 'muted' }, t('c.loadingMenu'))));
   try {
     await ensureData();
@@ -657,6 +660,17 @@ function infoScreen(root) {
   };
   paint();
   return paint;
+}
+
+// ---------- Not set up (Space default locale is not DATA_LOCALE) ----------
+function setupScreen() {
+  return h('div', { class: 'c-wrap closed-wrap' },
+    h('div', { class: 'row-between' }, h('span'), langSwitcher('lang-compact')),
+    h('div', { class: 'closed-center' },
+      h('div', { class: 'closed-icon' }, icon('info', 32)),
+      h('h1', null, t('c.setup.title')),
+      h('p', null, t('c.setup.body'))),
+    poweredBy());
 }
 
 // ---------- Closed ----------

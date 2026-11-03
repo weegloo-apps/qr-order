@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'メニューだけ見る',
   'c.closed.info': '店舗情報を見る',
   'c.closed.myOrders': '注文履歴を見る',
+  'c.setup.title': 'まだ注文を受け付けていません',
+  'c.setup.body': 'お店の設定がまだ終わっていません。ご注文はレジでお伝えください。',
 
   // Admin: shell & login
   'nav.dashboard': 'ダッシュボード',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'ログイン状態を保持',
   'a.login.help': 'この店舗（Weegloo Space）に招待されたアカウントのみログインできます。ログイン画面が開かない場合は、このサイトのポップアップを許可してください。',
   'a.login.back': 'お客様画面へ',
+  'a.setup.title': 'このSpaceの既定の言語をEnglishにしてください',
+  'a.setup.body': 'QRオーダーは価格・営業時間・注文を英語（en-US）の欄に保存します。このSpaceの既定の言語（{lang}）が英語ではないため、お客様は注文できず、ここで変えた内容も正しい欄に保存されません。',
+  'a.setup.step1': 'Weegloo コンソールでこのSpaceの設定を開き、Locale管理に進みます。',
+  'a.setup.step2': 'English (United States) を開いて「既定のLocaleに設定」にチェックを入れ、保存します。',
+  'a.setup.step3': 'ほかの言語（例: {lang}）を開き、Fallback LocaleをEnglish (United States)にします。翻訳していない文言も表示されるようになります。',
+  'a.setup.step4': 'この画面に戻って「再確認」を押します。',
+  'a.setup.recheck': '再確認',
   'a.adminTag': '管理者',
   'a.adminNav': '管理メニュー',
   'a.customerView': 'お客様画面',

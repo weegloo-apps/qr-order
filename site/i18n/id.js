@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'Lihat menu saja',
   'c.closed.info': 'Lihat info toko',
   'c.closed.myOrders': 'Lihat pesanan saya',
+  'c.setup.title': 'Belum bisa memesan',
+  'c.setup.body': 'Toko masih disiapkan. Silakan pesan di kasir.',
 
   // Admin: shell & login
   'nav.dashboard': 'Dasbor',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'Tetap masuk',
   'a.login.help': 'Hanya akun yang diundang ke toko ini (Weegloo Space) yang bisa masuk. Jika jendela masuk tidak terbuka, izinkan pop-up untuk situs ini.',
   'a.login.back': 'Ke layar pelanggan',
+  'a.setup.title': 'Jadikan bahasa Inggris bahasa default Space ini',
+  'a.setup.body': 'QR Order menyimpan harga, jam buka, dan pesanan dalam bahasa Inggris (en-US). Bahasa default Space ini ({lang}) bukan bahasa Inggris, jadi tamu tidak bisa memesan dan perubahan di sini akan tersimpan di tempat yang salah.',
+  'a.setup.step1': 'Di konsol Weegloo, buka pengaturan Space ini lalu masuk ke Locales.',
+  'a.setup.step2': 'Buka English (United States), centang “Jadikan Locale default”, lalu simpan.',
+  'a.setup.step3': 'Buka bahasa lain Anda (misalnya {lang}) dan atur Fallback Locale-nya ke English (United States), agar teks yang belum diterjemahkan tetap tampil.',
+  'a.setup.step4': 'Kembali ke sini dan tekan “Periksa lagi”.',
+  'a.setup.recheck': 'Periksa lagi',
   'a.adminTag': 'Admin',
   'a.adminNav': 'Menu admin',
   'a.customerView': 'Layar pelanggan',

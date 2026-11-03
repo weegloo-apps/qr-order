@@ -1,7 +1,7 @@
 import { CONFIG } from '/js/config.js';
 import { admin, adminAuth, fetchPublicStore, val } from '/js/api.js';
 import { navigate, render } from '/js/main.js';
-import { t } from '/js/i18n.js';
+import { defaultLocale, langName, localeReady, t } from '/js/i18n.js';
 import { langSwitcher } from '/js/lang-ui.js';
 import { h, icon, poweredBy, tableLabel, toast } from '/js/util.js';
 import { adminData, alertLength, audioReady, chime, fetchOpenCalls, hush, loadStore, saveStore, soundOn, storeVal, syncTimeZone, unlockAudio, watcher } from '/js/admin/data.js';
@@ -34,6 +34,14 @@ export async function renderAdmin(app, path, isCurrent) {
     shell = null;
     watcher.stop();
     app.replaceChildren(await loginView(auth.reason));
+    return;
+  }
+  // Stop before anything is read or saved (syncTimeZone included): in a Space whose default locale is
+  // not DATA_LOCALE every save would land in that other locale, out of the order Scripts' reach.
+  if (!localeReady()) {
+    shell = null;
+    watcher.stop();
+    app.replaceChildren(setupView());
     return;
   }
   try {
@@ -131,6 +139,23 @@ async function loginView(reason) {
           t('a.login.keep')),
         h('p', { class: 'login-help' }, t('a.login.help')),
         h('a', { href: '/', class: 'login-back' }, t('a.login.back')),
+        poweredBy())));
+}
+
+// Steps to make DATA_LOCALE the Space default; "Check again" reloads, which reads the Locales anew.
+function setupView() {
+  const lang = langName(defaultLocale());
+  document.title = t('a.setup.title');
+  return h('div', { class: 'login' },
+    h('div', { class: 'login-side' },
+      h('div', { class: 'login-form' },
+        langSwitcher('lang-login'),
+        h('div', { class: 'col-tight' },
+          h('h2', null, t('a.setup.title')),
+          h('p', { class: 'muted' }, t('a.setup.body', { lang }))),
+        h('ol', { class: 'setup-steps' }, ['a.setup.step1', 'a.setup.step2', 'a.setup.step3', 'a.setup.step4'].map((k) => h('li', null, t(k, { lang })))),
+        h('button', { type: 'button', class: 'login-btn', onClick: () => location.reload() }, t('a.setup.recheck')),
+        h('button', { type: 'button', class: 'link-btn login-back', onClick: logout }, t('a.logout')),
         poweredBy())));
 }
 

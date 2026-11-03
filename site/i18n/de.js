@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'Nur Speisekarte ansehen',
   'c.closed.info': 'Infos zum Geschäft',
   'c.closed.myOrders': 'Meine Bestellungen',
+  'c.setup.title': 'Bestellungen sind noch nicht möglich',
+  'c.setup.body': 'Das Geschäft wird noch eingerichtet. Bitte bestellen Sie an der Theke.',
 
   // Admin: shell & login
   'nav.dashboard': 'Übersicht',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'Angemeldet bleiben',
   'a.login.help': 'Nur Konten, die zu diesem Geschäft (Weegloo Space) eingeladen sind, können sich anmelden. Öffnet sich das Anmeldefenster nicht, erlauben Sie Pop-ups für diese Seite.',
   'a.login.back': 'Zur Gästeansicht',
+  'a.setup.title': 'Englisch als Standardsprache dieses Space festlegen',
+  'a.setup.body': 'QR Order speichert Preise, Öffnungszeiten und Bestellungen unter Englisch (en-US). Die Standardsprache dieses Space ({lang}) ist nicht Englisch, daher können Gäste nicht bestellen, und Änderungen hier würden an der falschen Stelle gespeichert.',
+  'a.setup.step1': 'Öffnen Sie in der Weegloo-Konsole die Einstellungen dieses Space und dort die Locales.',
+  'a.setup.step2': 'Öffnen Sie English (United States), setzen Sie das Häkchen bei „Als Standard-Locale festlegen“ und speichern Sie.',
+  'a.setup.step3': 'Öffnen Sie Ihre anderen Sprachen (z. B. {lang}) und stellen Sie die Fallback-Locale auf English (United States), damit auch nicht übersetzte Texte erscheinen.',
+  'a.setup.step4': 'Kommen Sie hierher zurück und tippen Sie auf „Erneut prüfen“.',
+  'a.setup.recheck': 'Erneut prüfen',
   'a.adminTag': 'Admin',
   'a.adminNav': 'Admin-Navigation',
   'a.customerView': 'Gästeansicht',

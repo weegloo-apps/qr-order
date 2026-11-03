@@ -224,7 +224,10 @@ export async function menuPage(main, { isCurrent }) {
     try {
       const upload = await admin.uploadFile(file);
       if (form === f) { f.photo = t('m.photo.processing'); paint(); }
-      const created = await admin.createMedia({ upload, fileName: file.name, contentType: file.type, title: lbl(withDefault(f.name)) || file.name });
+      // The name typed so far titles the photo. Before any name it is an empty map, which lbl() hands
+      // back as is, so fall back to the file name instead of sending {} (a 400 from the Media create).
+      const name = lbl(withDefault(f.name));
+      const created = await admin.createMedia({ upload, fileName: file.name, contentType: file.type, title: typeof name === 'string' && name ? name : file.name });
       const media = await waitForMedia(created.sys.id);
       adminData.media.set(media.sys.id, media);
       if (form !== f) { discardMedia(media); return; }

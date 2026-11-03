@@ -12,6 +12,9 @@ account to handle orders, edit the menu and store settings, and see sales.
 > To take real card payments, switch it as described in [Switching to another payment provider](#switching-to-another-payment-provider).
 > Until then, turn off **Pay when ordering** in Store settings → Order settings and take payment at the counter.
 
+> ⚠️ **Install into a Space whose default language is English (en-US).** With another default no order goes through,
+> and the owner screen shows how to switch it (see Default locale under [Good to know](#good-to-know)).
+
 ## What's inside
 
 | Path | Contents |
@@ -185,7 +188,7 @@ Free plan's 30 statements. To move to the current Scripts:
 ## Good to know
 
 - **Time zone**: times are stored in UTC, and the screens show them in the store's time zone. The first time the admin screen opens, it saves that device's time zone (`store.timeZone`, e.g. `Asia/Seoul`) and its current UTC offset in minutes (`store.utcOffsetMin`). The zone stays put after that; the offset is refreshed whenever the admin screen opens after a daylight saving change. Scripts cannot convert time zones, so `place-order` and `confirm-payment` use `utcOffsetMin` for opening hours, last order and the day an order is counted in (`businessDay`, order numbers from `A-001`). Until a store has the value, they use Korea time (`32400000`, 9 hours). If you installed before October 29, 2026, your Space has neither the two store fields nor this logic and stays on Korea time: add the fields from `weegloo/content-types/store.json` and replace the `32400000` in the two Scripts as in `weegloo/scripts/`.
-- **Default locale**: the Scripts read and write language-neutral values under `en-US` and assume it is the Space's default locale.
+- **Default locale**: the Scripts read and write language-neutral values (prices, opening hours, orders) under `en-US`, so it must be the Space's default locale. An install keeps the Space's own default. In a Space whose default is another language, every order and staff call is refused (`locale en-US is not allowed for this field`) and screens in the default language read those values as empty. Both screens check this (`localeReady()` in `site/js/i18n.js`): guests see "We're not taking orders yet", and the owner screen stops before it reads or saves anything and shows how to fix it. In the Weegloo console, open the Space settings → Locales, make English (United States) the default locale, and set the other languages' fallback locale to English (United States).
 - **Screen text (10 languages)**: English, Korean, Japanese, Simplified Chinese, German, French, Spanish, Portuguese, Hindi and Indonesian. The English source is the `EN` dictionary in `site/js/i18n.js`; the other nine are in `site/i18n/<language>.js` (`ko`, `ja`, `zh`, `de`, `fr`, `es`, `pt`, `hi`, `id`) and load only when that language is in use. A missing key or value shows the English text.
   - The language list follows the Space's Locales, and a Locale picks its dictionary by its language part (`ja-JP` → `ja`, `pt-BR` → `pt`). A language without a dictionary (such as `nl`) and Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant…`) get English screen text, while the content shows in that language. To offer another language, add a Locale to the Space.
   - Number, date and currency formats (`Intl`), the Stripe checkout language and the map language follow the screen-text language; a language without a dictionary uses `en-US` formats. Stripe has no Hindi, so it picks from the browser (`auto`). Japanese and Chinese screens use system fonts, so their characters are not drawn in the Korean font (Noto Sans KR).

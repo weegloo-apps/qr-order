@@ -201,6 +201,8 @@ export default {
   'c.closed.browse': 'Consulter le menu',
   'c.closed.info': 'Voir les infos pratiques',
   'c.closed.myOrders': 'Voir mes commandes',
+  'c.setup.title': 'Les commandes ne sont pas encore ouvertes',
+  'c.setup.body': 'Le commerce est encore en cours de configuration. Merci de commander au comptoir.',
 
   // Admin: shell & login
   'nav.dashboard': 'Tableau de bord',
@@ -226,6 +228,13 @@ export default {
   'a.login.keep': 'Rester connecté',
   'a.login.help': 'Seuls les comptes invités dans cet établissement (Weegloo Space) peuvent se connecter. Si la fenêtre de connexion ne s’ouvre pas, autorisez les pop-ups pour ce site.',
   'a.login.back': 'Aller à l’écran client',
+  'a.setup.title': 'Définissez l’anglais comme langue par défaut de ce Space',
+  'a.setup.body': 'QR Order enregistre prix, horaires et commandes en anglais (en-US). La langue par défaut de ce Space ({lang}) n’est pas l’anglais\u00a0: les clients ne peuvent pas commander et les modifications faites ici seraient enregistrées au mauvais endroit.',
+  'a.setup.step1': 'Dans la console Weegloo, ouvrez les paramètres de ce Space, puis les Locales.',
+  'a.setup.step2': 'Ouvrez English (United States), cochez «\u00a0Définir comme Locale par défaut\u00a0» et enregistrez.',
+  'a.setup.step3': 'Ouvrez vos autres langues (par ex. {lang}) et choisissez English (United States) comme Locale de repli, pour que les textes non traduits s’affichent aussi.',
+  'a.setup.step4': 'Revenez ici et appuyez sur «\u00a0Vérifier à nouveau\u00a0».',
+  'a.setup.recheck': 'Vérifier à nouveau',
   'a.adminTag': 'Admin',
   'a.adminNav': 'Navigation admin',
   'a.customerView': 'Vue client',

@@ -202,6 +202,8 @@ export default {
   'c.closed.browse': '先看看菜单',
   'c.closed.info': '查看门店信息',
   'c.closed.myOrders': '查看我的订单',
+  'c.setup.title': '暂时还不能点单',
+  'c.setup.body': '门店还在设置中，请到柜台点单。',
 
   // Admin: shell & login
   'nav.dashboard': '概览',
@@ -227,6 +229,13 @@ export default {
   'a.login.keep': '保持登录',
   'a.login.help': '仅受邀加入本店（Weegloo Space）的账号可以登录。如果登录窗口没有弹出，请允许本网站弹出窗口。',
   'a.login.back': '前往顾客页面',
+  'a.setup.title': '请把此 Space 的默认语言改为 English',
+  'a.setup.body': 'QR 点单把价格、营业时间和订单保存在英语（en-US）栏位中。此 Space 的默认语言（{lang}）不是英语，所以顾客无法下单，在这里修改的内容也会保存到错误的栏位。',
+  'a.setup.step1': '在 Weegloo 控制台打开此 Space 的设置，进入 Locale 管理。',
+  'a.setup.step2': '打开 English (United States)，勾选“设为默认 Locale”并保存。',
+  'a.setup.step3': '打开其他语言（例如 {lang}），把 Fallback Locale 设为 English (United States)，这样未翻译的文字也能显示。',
+  'a.setup.step4': '回到此页面，点击“重新检查”。',
+  'a.setup.recheck': '重新检查',
   'a.adminTag': '管理',
   'a.adminNav': '管理导航',
   'a.customerView': '顾客页面',
