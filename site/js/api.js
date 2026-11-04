@@ -103,7 +103,7 @@ export const imageIds = (items) => [...new Set(items.map((x) => val(x.fields, 'i
 async function mediaByIds(ids, get) {
   const out = [];
   for (let i = 0; i < ids.length; i += 50) {
-    const d = await get(`/spaces/${S}/medias?sys.id[in]=${ids.slice(i, i + 50).join(',')}&select=sys.id,fields.file&limit=100`);
+    const d = await get(`/spaces/${S}/medias?sys.id[in]=${ids.slice(i, i + 50).join(',')}&select=sys.id,sys.createdAt,fields.file&limit=100`);
     out.push(...(d.items || []));
   }
   return out;
