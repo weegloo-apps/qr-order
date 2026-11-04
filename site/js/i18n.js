@@ -310,6 +310,7 @@ const EN = {
   'c.err.itemFallback': 'this item',
   'c.err.optionFallback': 'the options',
   'c.err.togo': "We're not taking takeout orders right now.",
+  'c.err.table': "This table's QR code is no longer in use. Please ask our staff.",
   'c.err.generic': "Couldn't send your order. Please try again shortly.",
   'c.err.payment': 'Couldn\'t open the payment page. Please try again.',
   'c.err.payMin': 'The total is below the minimum for card payment.',

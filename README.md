@@ -177,6 +177,13 @@ Free plan's 30 statements. To move to the current Scripts:
 4. Overwrite `place-order` and `confirm-payment` with the files in `weegloo/scripts/` (placeholders replaced). The files
    carry the secret empty, so put your Stripe secret key back in `confirm-payment`'s `STRIPE_SECRET_KEY`.
 
+**Opening hours past midnight (fixed November 2026).** Earlier versions checked only today's opening hours. A day that
+runs past midnight (18:00 – 02:00) was closed after midnight, and a day that opens in the evening was open just after
+midnight. To fix an install from before then, overwrite `place-order` with `weegloo/scripts/place-order.json`
+(placeholders replaced) **and** deploy the site: the screen and the Script must change together, or they disagree.
+The new `place-order` also refuses table numbers above the store's table count (`table-unknown`), and the new
+`start-checkout` accepts only https sites as return addresses.
+
 ## Deploying
 
 1. Zip the **contents** of `site/` (`index.html` at the top of the ZIP).
@@ -188,6 +195,7 @@ Free plan's 30 statements. To move to the current Scripts:
 ## Good to know
 
 - **Time zone**: times are stored in UTC, and the screens show them in the store's time zone. The first time the admin screen opens, it saves that device's time zone (`store.timeZone`, e.g. `Asia/Seoul`) and its current UTC offset in minutes (`store.utcOffsetMin`). The zone stays put after that; the offset is refreshed whenever the admin screen opens after a daylight saving change. Scripts cannot convert time zones, so `place-order` and `confirm-payment` use `utcOffsetMin` for opening hours, last order and the day an order is counted in (`businessDay`, order numbers from `A-001`). Until a store has the value, they use Korea time (`32400000`, 9 hours). If you installed before October 29, 2026, your Space has neither the two store fields nor this logic and stays on Korea time: add the fields from `weegloo/content-types/store.json` and replace the `32400000` in the two Scripts as in `weegloo/scripts/`.
+- **Opening hours**: each weekday has one opening (`store.hours`, `from`–`to`). A closing time at or before the opening time runs past midnight into the next day: Friday 18:00 – 02:00 takes orders until Saturday 02:00 minus the last-order minutes. After midnight, the screen (`currentSessions()` in `site/js/hours.js`) and `place-order` first check whether yesterday's opening is still running, then today's. The early hours of a day that opens in the evening are not open, so with Wednesday closed, Thursday 00:55 is closed even when Thursday runs 18:00 – 02:00. The business day (sales reports, order numbers from `A-001`) still changes at midnight in the store's time zone, so orders after midnight count toward the next day.
 - **Default locale**: the Scripts read and write language-neutral values (prices, opening hours, orders) under `en-US`, so it must be the Space's default locale. An install keeps the Space's own default. In a Space whose default is another language, every order and staff call is refused (`locale en-US is not allowed for this field`) and screens in the default language read those values as empty. Both screens check this (`localeReady()` in `site/js/i18n.js`): guests see "We're not taking orders yet", and the owner screen stops before it reads or saves anything and shows how to fix it. In the Weegloo console, open the Space settings → Locales, make English (United States) the default locale, and set the other languages' fallback locale to English (United States).
 - **Screen text (10 languages)**: English, Korean, Japanese, Simplified Chinese, German, French, Spanish, Portuguese, Hindi and Indonesian. The English source is the `EN` dictionary in `site/js/i18n.js`; the other nine are in `site/i18n/<language>.js` (`ko`, `ja`, `zh`, `de`, `fr`, `es`, `pt`, `hi`, `id`) and load only when that language is in use. A missing key or value shows the English text.
   - The language list follows the Space's Locales, and a Locale picks its dictionary by its language part (`ja-JP` → `ja`, `pt-BR` → `pt`). A language without a dictionary (such as `nl`) and Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant…`) get English screen text, while the content shows in that language. To offer another language, add a Locale to the Space.

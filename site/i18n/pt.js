@@ -113,6 +113,7 @@ export default {
   'c.err.itemFallback': 'este item',
   'c.err.optionFallback': 'as opções',
   'c.err.togo': 'Não estamos aceitando pedidos para viagem agora.',
+  'c.err.table': 'O QR desta mesa não está mais em uso. Fale com a nossa equipe.',
   'c.err.generic': 'Não foi possível enviar seu pedido. Tente novamente em instantes.',
   'c.err.payment': 'Não foi possível abrir a página de pagamento. Tente novamente.',
   'c.err.payMin': 'O total está abaixo do valor mínimo para pagamento com cartão.',

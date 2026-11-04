@@ -403,6 +403,7 @@ function cartScreen(root) {
       else if (e.code === 'option-required' || e.code === 'option-single') { await ensureData(true).catch(() => {}); toast(t('c.err.option', { name: itemName() || t('c.err.itemFallback'), group: groupName() || t('c.err.optionFallback') })); }
       else if (e.code === 'payment-unavailable') toast(e.data?.reason === 'amount_too_small' ? t('c.err.payMin') : t('c.err.payment'));
       else if (e.code === 'togo-disabled') { await ensureData(true).catch(() => {}); const c = getCart(); c.orderType = 'here'; saveCart(c); toast(t('c.err.togo')); }
+      else if (e.code === 'table-unknown') toast(t('c.err.table'));
       else toast(t('c.err.generic'));
     }
     sending = false;
@@ -518,8 +519,17 @@ function ordersScreen(root) {
     const orders = getMyOrders();
     const active = orders.filter((o) => o.status === 'new' || o.status === 'preparing');
     const past = orders.filter((o) => o.status === 'done' || o.status === 'rejected');
-    const total = orders.filter((o) => o.status !== 'rejected' && o.payment !== 'refunded').reduce((a, o) => a + (Number(o.total) || 0), 0);
-    const allPaid = orders.length > 0 && orders.every((o) => o.payment === 'paid' || o.payment === 'refunded');
+    // Card-paid orders and counter orders are summed apart: only the counter part is still to pay
+    // (both can sit on one phone when the store switches payment mode while guests are seated).
+    const counted = orders.filter((o) => o.status !== 'rejected' && o.payment !== 'refunded');
+    const sum = (list) => list.reduce((a, o) => a + (Number(o.total) || 0), 0);
+    const paidTotal = sum(counted.filter((o) => o.payment === 'paid'));
+    const dueTotal = sum(counted.filter((o) => o.payment !== 'paid'));
+    const anyCard = orders.some((o) => o.payment === 'paid' || o.payment === 'refunded');
+    const paidOnly = dueTotal === 0 && (paidTotal > 0 || anyCard);
+    const totalRow = (label, amount, note) => [
+      h('div', { class: 'row-between total-row' }, h('span', null, label), h('span', null, money(amount))),
+      h('p', { class: 'muted-p' }, note)];
     const call = getCall();
     // A handled call clears itself after a short while; repaint then (no network involved).
     clearTimeout(ackTimer);
@@ -544,8 +554,8 @@ function ordersScreen(root) {
             h('span', { class: `pill-light${o.status === 'rejected' || o.payment === 'refunded' ? ' is-red' : ''}` }, o.payment === 'refunded' ? t('c.refundedPill') : o.status === 'rejected' ? t('c.cancelledPill') : o.orderType === 'togo' ? t('c.step.ready') : t('c.step.served'))),
           linesBox(o, { boxed: false }))),
         orders.length ? h('div', { class: 'total-block' },
-          h('div', { class: 'row-between total-row' }, h('span', null, allPaid ? t('c.paidTotal') : t('c.tableTotal')), h('span', null, money(total))),
-          h('p', { class: 'muted-p' }, allPaid ? t('c.paidNote') : t('c.payOnLeave')),
+          paidOnly ? null : totalRow(t('c.tableTotal'), dueTotal, t('c.payOnLeave')),
+          paidOnly || paidTotal > 0 ? totalRow(t('c.paidTotal'), paidTotal, t('c.paidNote')) : null,
           active.length ? h('button', {
             type: 'button', class: 'link-btn link-btn-sm', disabled: refreshing,
             onClick: async () => { refreshing = true; paint(); await w?.now(); refreshing = false; paint(); },

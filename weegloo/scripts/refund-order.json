@@ -289,7 +289,7 @@
       {
         "key": "STRIPE_SECRET_KEY",
         "value": "",
-        "description": "Stripe secret key (server-side only)"
+        "description": "Your Stripe secret key. To stay in test mode, paste Stripe's public test key (sk_test_…) from docs.stripe.com."
       }
     ]
   }

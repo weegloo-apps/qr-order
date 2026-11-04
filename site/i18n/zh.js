@@ -114,6 +114,7 @@ export default {
   'c.err.itemFallback': '该商品',
   'c.err.optionFallback': '选项',
   'c.err.togo': '现在暂不接受外带订单。',
+  'c.err.table': '这张桌台的二维码已停用，请联系店员。',
   'c.err.generic': '订单提交失败，请稍后重试。',
   'c.err.payment': '无法打开支付页面，请重试。',
   'c.err.payMin': '订单金额低于银行卡支付的最低金额。',

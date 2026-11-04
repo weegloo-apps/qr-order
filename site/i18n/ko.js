@@ -114,6 +114,7 @@ export default {
   'c.err.itemFallback': '메뉴',
   'c.err.optionFallback': '옵션',
   'c.err.togo': '지금은 포장 주문을 받지 않아요.',
+  'c.err.table': '이 테이블 QR은 더 이상 쓰지 않아요. 직원에게 문의해 주세요.',
   'c.err.generic': '주문을 보내지 못했어요. 잠시 후 다시 시도해 주세요.',
   'c.err.payment': '결제 화면을 열지 못했어요. 다시 시도해 주세요.',
   'c.err.payMin': '카드 결제 최소 금액보다 적어요.',

@@ -2,7 +2,8 @@ import { t } from '/js/i18n.js';
 import { ampm, dayLong, dayShort, hmToMin, storeTime, minToHM } from '/js/util.js';
 
 // Business hours are stored as [{ dow: 0..6 (Sun..Sat), open, from: 'HH:MM', to: 'HH:MM', fromMin, toMin }].
-// The place-order Script applies the same rule server-side, so the two must stay in step.
+// The place-order Script applies the same rule server-side (yesterday's past-midnight opening included),
+// so the two must stay in step.
 export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export function normHours(hours) {
@@ -23,24 +24,38 @@ export function serializeHours(hours) {
   });
 }
 
-function within(min, from, to) {
-  return to > from ? min >= from && min < to : min >= from || min < to;
-}
+// A day's closing time in minutes from that day's midnight. A closing time at or before the opening time
+// ("18:00 – 02:00", "09:00 – 09:00") runs past midnight into the next day, so 1440 is added.
+export const endMin = (e) => (e.toMin <= e.fromMin ? e.toMin + 1440 : e.toMin);
 
 const nextLabel = (n) => (n.kind === 'today' ? t('day.today') : n.kind === 'tomorrow' ? t('day.tomorrow') : dayLong(n.dow));
+
+// The openings the current time falls in, in minutes from today's midnight. After midnight that can
+// still be yesterday's opening when it runs past midnight; today's own past-midnight part belongs to
+// tomorrow, never to this morning.
+export function currentSessions(hours, now) {
+  const out = [];
+  const yesterday = hours[(now.dow + 6) % 7];
+  if (yesterday.open && now.min < endMin(yesterday) - 1440) out.push({ e: yesterday, end: endMin(yesterday) - 1440 });
+  const today = hours[now.dow];
+  if (today.open && now.min >= today.fromMin && now.min < endMin(today)) out.push({ e: today, end: endMin(today) });
+  return out;
+}
 
 export function storeStatus(store, ms = Date.now()) {
   const now = storeTime(ms);
   const hours = normHours(store?.hours);
   const today = hours[now.dow];
   const last = Number(store?.lastOrderMinutes) || 0;
-  const inHours = today.open && within(now.min, today.fromMin, today.toMin);
-  const inOrderWindow = today.open && within(now.min, today.fromMin, today.toMin - last);
+  const sessions = currentSessions(hours, now);
+  const inHours = sessions.length > 0;
+  const inOrderWindow = sessions.some((s) => now.min < s.end - last);
   const manualClosed = !store?.acceptOrders;
   const accepting = !manualClosed && inOrderWindow;
+  const shown = sessions.length ? sessions[sessions.length - 1].e : today;
 
   let next = null;
-  if (today.open && now.min < today.fromMin && today.toMin > today.fromMin) next = { kind: 'today', dow: now.dow, min: today.fromMin };
+  if (today.open && now.min < today.fromMin) next = { kind: 'today', dow: now.dow, min: today.fromMin };
   else {
     for (let i = 1; i <= 7; i++) {
       const e = hours[(now.dow + i) % 7];
@@ -55,8 +70,8 @@ export function storeStatus(store, ms = Date.now()) {
     today,
     hours,
     now,
-    closesAt: today.to,
-    lastOrderAt: minToHM(today.toMin - last),
+    closesAt: shown.to,
+    lastOrderAt: minToHM(endMin(shown) - last),
     lastOrderMinutes: last,
     next,
     nextText: next ? `${next.label} ${ampm(next.min)}` : null,

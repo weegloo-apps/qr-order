@@ -168,6 +168,12 @@ QR 주문은 Weegloo Free 플랜에서 돌아갑니다. 한도는 조직 전체 
 4. `place-order`와 `confirm-payment`를 `weegloo/scripts/`의 파일로 덮어씁니다(자리 표시 값 바꿔서). 파일의 시크릿은 비어 있으니
    `confirm-payment`의 `STRIPE_SECRET_KEY`에 Stripe 비밀 키를 다시 넣습니다.
 
+**자정을 넘기는 영업 시간 (2026년 11월 수정).** 이전 버전은 그날 요일의 영업 시간만 봤습니다. 그래서 자정을 넘기는 날
+(18:00 – 02:00)은 자정 이후 영업 종료로, 저녁에 여는 날은 자정 직후 영업 중으로 잘못 판단했습니다. 그 전에 설치했다면
+`place-order`를 `weegloo/scripts/place-order.json`(자리 표시 값을 바꿔서)으로 덮어쓰고 **사이트도 함께** 배포하세요. 화면과
+Script가 같이 바뀌어야 둘의 판단이 어긋나지 않습니다. 새 `place-order`는 매장 테이블 수보다 큰 테이블 번호도 거절하고
+(`table-unknown`), 새 `start-checkout`은 결제 후 돌아올 주소로 https 사이트만 받습니다.
+
 ## 배포
 
 1. `site/`의 **내용**을 ZIP으로 묶습니다(ZIP 맨 위에 `index.html`).
@@ -179,6 +185,7 @@ QR 주문은 Weegloo Free 플랜에서 돌아갑니다. 한도는 조직 전체 
 ## 알아 둘 것
 
 - **시간대**: 시각은 UTC로 저장하고, 화면은 매장 시간대로 보여 줍니다. 관리자 화면을 처음 열면 그 기기의 시간대(`store.timeZone`, 예: `Asia/Seoul`)와 지금의 UTC 차이(분, `store.utcOffsetMin`)를 매장 정보에 저장합니다. 시간대는 그 뒤로 바뀌지 않고, UTC 차이는 서머타임이 바뀐 뒤 관리자 화면을 열면 다시 저장됩니다. Script는 시간대를 변환할 수 없어서 `place-order`와 `confirm-payment`는 `utcOffsetMin`으로 영업 시간, 라스트 오더, 주문이 속한 날(`businessDay`, 매일 `A-001`부터 시작하는 주문 번호)을 정합니다. 값이 아직 없으면 한국 시간(`32400000`, 9시간)을 씁니다. 2026년 10월 29일 전에 설치했다면 내 Space에는 두 필드와 이 로직이 없어 한국 시간 그대로입니다. `weegloo/content-types/store.json`의 두 필드를 추가하고, 두 Script의 `32400000`을 `weegloo/scripts/`처럼 바꿔 주세요.
+- **영업 시간**: 요일마다 영업 시간이 하나씩 있습니다(`store.hours`의 `from`–`to`). 종료 시간이 시작 시간과 같거나 이르면 자정을 넘겨 다음 날까지 이어집니다. 금요일 18:00 – 02:00이면 토요일 02:00에서 라스트 오더 시간을 뺀 때까지 주문을 받습니다. 자정 이후에는 화면(`site/js/hours.js`의 `currentSessions()`)과 `place-order`가 전날 영업이 아직 이어지는지 먼저 보고, 그다음 그날 영업을 봅니다. 저녁에 여는 날의 새벽은 영업이 아니므로, 수요일이 쉬는 날이면 목요일 18:00 – 02:00이어도 목요일 0시 55분은 영업 전입니다. 매출 집계와 주문 번호(`A-001`부터)의 영업일은 지금처럼 매장 시간대의 자정에 바뀌어, 자정을 넘긴 주문은 다음 날로 셉니다.
 - **기본 로케일**: Script는 언어와 상관없는 값(가격, 영업 시간, 주문)을 `en-US`에서 읽고 쓰므로, Space의 기본 로케일이 `en-US`여야 합니다. 설치해도 Space의 원래 기본 로케일은 바뀌지 않습니다. 기본 로케일이 다른 언어인 Space에서는 주문과 직원 호출이 모두 거절되고(`locale en-US is not allowed for this field`), 기본 언어 화면에서는 이 값들이 빈 값으로 읽힙니다. 두 화면이 이를 확인합니다(`site/js/i18n.js`의 `localeReady()`). 손님 화면은 "아직 주문을 받을 준비가 안 됐어요"를 보여 주고, 관리자 화면은 아무것도 읽거나 저장하기 전에 멈추고 고치는 방법을 안내합니다. Weegloo 콘솔에서 Space 설정 → Locale 관리를 열고, English (United States)를 기본 Locale로 정한 뒤 다른 언어의 Fallback Locale을 English (United States)로 바꾸세요.
 - **화면 문구(10개 언어)**: 영어 · 한국어 · 일본어 · 중국어(간체) · 독일어 · 프랑스어 · 스페인어 · 포르투갈어 · 힌디어 · 인도네시아어. 영어 원문은 `site/js/i18n.js`의 `EN` 사전이고, 나머지 아홉 언어는 `site/i18n/<언어>.js`(`ko`, `ja`, `zh`, `de`, `fr`, `es`, `pt`, `hi`, `id`)에 있어 그 언어를 쓸 때만 내려받습니다. 키나 값이 빠지면 영어 문구가 나옵니다.
   - 언어 목록은 Space의 Locale을 따르고, Locale은 언어 부분으로 사전을 고릅니다(`ja-JP` → `ja`, `pt-BR` → `pt`). 사전이 없는 언어(예: `nl`)와 번체 중국어(`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant…`)는 문구가 영어로, 콘텐츠는 그 언어로 보입니다. 다른 언어를 쓰려면 Space에 Locale을 추가하세요.

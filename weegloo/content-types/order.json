@@ -150,7 +150,7 @@
     },
     {
       "id": "1msayj3fo8sxi",
-      "name": "Business day (KST)",
+      "name": "Business day (store time zone)",
       "apiName": "businessDay",
       "type": "ShortText",
       "localized": false,

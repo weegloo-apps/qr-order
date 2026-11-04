@@ -113,6 +113,7 @@ export default {
   'c.err.itemFallback': 'cet article',
   'c.err.optionFallback': 'les options',
   'c.err.togo': 'Nous ne prenons pas de commandes à emporter pour le moment.',
+  'c.err.table': 'Le QR code de cette table n’est plus utilisé. Merci de vous adresser à notre équipe.',
   'c.err.generic': 'Impossible d’envoyer votre commande. Veuillez réessayer dans un instant.',
   'c.err.payment': 'Impossible d’ouvrir la page de paiement. Veuillez réessayer.',
   'c.err.payMin': 'Le total est inférieur au minimum requis pour un paiement par carte.',

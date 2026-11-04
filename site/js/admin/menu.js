@@ -94,6 +94,9 @@ export async function menuPage(main, { isCurrent }) {
 
   const sections = () => adminData.sections;
   const items = () => adminData.items;
+  // Delete a photo no menu item points at any more (best effort, in the background); one still used
+  // by another item is kept.
+  const dropUnusedPhoto = (id) => { if (id && !items().some((i) => i.imageId === id)) discardMedia({ sys: { id } }); };
   const itemsOf = (sid) => items().filter((i) => i.sectionId === sid).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
   const startLocale = () => (getLocales().some((l) => l.code === contentLocale()) ? contentLocale() : defaultLocale());
   if (!sections().some((s) => s.id === selectedId)) selectedId = sections()[0]?.id || null;
@@ -366,6 +369,8 @@ export async function menuPage(main, { isCurrent }) {
       }
       // The saved item now uses this photo; it is no longer an unsaved upload to clean up.
       form.newMedia = null;
+      // A saved photo that was replaced or removed would otherwise stay published in the Space.
+      if (existing?.imageId && existing.imageId !== form.imageId) dropUnusedPhoto(existing.imageId);
       selectedId = form.sectionId;
       editing = null;
       form = null;
@@ -391,6 +396,7 @@ export async function menuPage(main, { isCurrent }) {
       await admin.remove(CT.item, it.raw);
       adminData.items = items().filter((i) => i.id !== it.id);
       if (editing === it.id) { if (form?.newMedia) discardMedia(form.newMedia); editing = null; form = null; }
+      dropUnusedPhoto(it.imageId);
       toast(t('m.deleted'));
     } catch (e) { await fail(e, t('m.delFail')); }
     paint();

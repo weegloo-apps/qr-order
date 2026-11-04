@@ -606,6 +606,13 @@ select.input { padding: 0 10px; }
 }
 
 /* ---------- Small screens ---------- */
+/* Below about 960px the settings nav no longer fits beside the form and wraps above it; a sticky nav
+   there would slide over the form while scrolling, so it becomes a plain row of tabs instead. */
+@media (max-width: 960px) {
+  .settings-nav { position: static; flex-direction: row; overflow-x: auto; flex-basis: 100%; scrollbar-width: none; }
+  .settings-nav::-webkit-scrollbar { display: none; }
+  .settings-link { flex: none; background: #FFFFFF; }
+}
 @media (max-width: 720px) {
   .a-header-in { padding: 12px 16px; }
   .a-nav { padding: 0 8px; }
@@ -616,9 +623,6 @@ select.input { padding: 0 10px; }
   .item-card { padding: 4px 16px 8px; }
   .save-bar { margin: 0 -16px -40px; }
   .save-bar-in { padding: 10px 16px calc(10px + var(--safe-b)); }
-  .settings-nav { position: static; flex-direction: row; overflow-x: auto; flex-basis: 100%; scrollbar-width: none; }
-  .settings-nav::-webkit-scrollbar { display: none; }
-  .settings-link { flex: none; background: #FFFFFF; }
   .kpi-value { font-size: 22px; }
   .bars { height: 190px; }
   .login-hero { padding: 32px 24px; gap: 28px; }

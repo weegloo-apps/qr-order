@@ -113,6 +113,7 @@ export default {
   'c.err.itemFallback': 'este producto',
   'c.err.optionFallback': 'las opciones',
   'c.err.togo': 'Ahora no aceptamos pedidos para llevar.',
+  'c.err.table': 'El código QR de esta mesa ya no se usa. Pregunta a nuestro personal.',
   'c.err.generic': 'No se pudo enviar tu pedido. Inténtalo de nuevo en un momento.',
   'c.err.payment': 'No se pudo abrir la página de pago. Inténtalo de nuevo.',
   'c.err.payMin': 'El total no llega al mínimo para pagar con tarjeta.',

@@ -235,128 +235,325 @@
               },
               "day"
             ]
+          },
+          "ydow": {
+            "$%": [
+              {
+                "$+": [
+                  {
+                    "$%": [
+                      {
+                        "$+": [
+                          {
+                            "$/": [
+                              {
+                                "$-": [
+                                  {
+                                    "$+": [
+                                      "{ /now/millis }",
+                                      {
+                                        "$if": [
+                                          {
+                                            "$===": [
+                                              "{ /store/fields/utcOffsetMin/en-US }",
+                                              null
+                                            ]
+                                          },
+                                          32400000,
+                                          {
+                                            "$*": [
+                                              "{ /store/fields/utcOffsetMin/en-US }",
+                                              60000
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "$%": [
+                                      {
+                                        "$+": [
+                                          "{ /now/millis }",
+                                          {
+                                            "$if": [
+                                              {
+                                                "$===": [
+                                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                                  null
+                                                ]
+                                              },
+                                              32400000,
+                                              {
+                                                "$*": [
+                                                  "{ /store/fields/utcOffsetMin/en-US }",
+                                                  60000
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      86400000
+                                    ]
+                                  }
+                                ]
+                              },
+                              86400000
+                            ]
+                          },
+                          4
+                        ]
+                      },
+                      7
+                    ]
+                  },
+                  6
+                ]
+              },
+              7
+            ]
           }
         }
       },
       {
         "type": "SetVar",
-        "var": "today",
+        "var": "oh",
         "value": {
-          "$if": [
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/0 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/0/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/0 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/1 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/1/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/1 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/2 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/2/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/2 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/3 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/3/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/3 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/4 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/4/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/4 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/5 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/5/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/5 }",
-            {
-              "and": [
-                {
-                  "!!": [
-                    "{ /store/fields/hours/en-US/6 }"
-                  ]
-                },
-                {
-                  "==": [
-                    "{ /store/fields/hours/en-US/6/dow }",
-                    "{ /vars/clock/dow }"
-                  ]
-                }
-              ]
-            },
-            "{ /store/fields/hours/en-US/6 }",
-            null
-          ]
+          "t": {
+            "$if": [
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/0 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/0/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/0 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/1 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/1/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/1 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/2 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/2/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/2 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/3 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/3/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/3 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/4 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/4/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/4 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/5 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/5/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/5 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/6 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/6/dow }",
+                      "{ /vars/clock/dow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/6 }",
+              null
+            ]
+          },
+          "y": {
+            "$if": [
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/0 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/0/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/0 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/1 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/1/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/1 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/2 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/2/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/2 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/3 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/3/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/3 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/4 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/4/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/4 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/5 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/5/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/5 }",
+              {
+                "and": [
+                  {
+                    "!!": [
+                      "{ /store/fields/hours/en-US/6 }"
+                    ]
+                  },
+                  {
+                    "==": [
+                      "{ /store/fields/hours/en-US/6/dow }",
+                      "{ /vars/clock/ydow }"
+                    ]
+                  }
+                ]
+              },
+              "{ /store/fields/hours/en-US/6 }",
+              null
+            ]
+          }
         }
       },
       {
@@ -372,30 +569,24 @@
                 },
                 {
                   "!": [
-                    "{ /vars/today }"
-                  ]
-                },
-                {
-                  "!": [
-                    "{ /vars/today/open }"
-                  ]
-                },
-                {
-                  "!": [
                     {
-                      "if": [
-                        {
-                          "<": [
-                            "{ /vars/today/fromMin }",
-                            "{ /vars/today/toMin }"
-                          ]
-                        },
+                      "or": [
                         {
                           "and": [
                             {
+                              "!!": [
+                                "{ /vars/oh/t }"
+                              ]
+                            },
+                            {
+                              "!!": [
+                                "{ /vars/oh/t/open }"
+                              ]
+                            },
+                            {
                               ">=": [
                                 "{ /vars/clock/min }",
-                                "{ /vars/today/fromMin }"
+                                "{ /vars/oh/t/fromMin }"
                               ]
                             },
                             {
@@ -403,7 +594,23 @@
                                 "{ /vars/clock/min }",
                                 {
                                   "-": [
-                                    "{ /vars/today/toMin }",
+                                    {
+                                      "if": [
+                                        {
+                                          "<=": [
+                                            "{ /vars/oh/t/toMin }",
+                                            "{ /vars/oh/t/fromMin }"
+                                          ]
+                                        },
+                                        {
+                                          "+": [
+                                            "{ /vars/oh/t/toMin }",
+                                            1440
+                                          ]
+                                        },
+                                        "{ /vars/oh/t/toMin }"
+                                      ]
+                                    },
                                     "{ /store/fields/lastOrderMinutes/en-US }"
                                   ]
                                 }
@@ -412,11 +619,21 @@
                           ]
                         },
                         {
-                          "or": [
+                          "and": [
                             {
-                              ">=": [
-                                "{ /vars/clock/min }",
-                                "{ /vars/today/fromMin }"
+                              "!!": [
+                                "{ /vars/oh/y }"
+                              ]
+                            },
+                            {
+                              "!!": [
+                                "{ /vars/oh/y/open }"
+                              ]
+                            },
+                            {
+                              "<=": [
+                                "{ /vars/oh/y/toMin }",
+                                "{ /vars/oh/y/fromMin }"
                               ]
                             },
                             {
@@ -424,7 +641,7 @@
                                 "{ /vars/clock/min }",
                                 {
                                   "-": [
-                                    "{ /vars/today/toMin }",
+                                    "{ /vars/oh/y/toMin }",
                                     "{ /store/fields/lastOrderMinutes/en-US }"
                                   ]
                                 }
@@ -434,6 +651,27 @@
                         }
                       ]
                     }
+                  ]
+                }
+              ]
+            },
+            {
+              "and": [
+                {
+                  ">": [
+                    "{ /payload/tableNo }",
+                    0
+                  ]
+                },
+                {
+                  "!!": [
+                    "{ /store/fields/tableCount/en-US }"
+                  ]
+                },
+                {
+                  ">": [
+                    "{ /payload/tableNo }",
+                    "{ /store/fields/tableCount/en-US }"
                   ]
                 }
               ]
@@ -471,30 +709,24 @@
                       },
                       {
                         "!": [
-                          "{ /vars/today }"
-                        ]
-                      },
-                      {
-                        "!": [
-                          "{ /vars/today/open }"
-                        ]
-                      },
-                      {
-                        "!": [
                           {
-                            "if": [
-                              {
-                                "<": [
-                                  "{ /vars/today/fromMin }",
-                                  "{ /vars/today/toMin }"
-                                ]
-                              },
+                            "or": [
                               {
                                 "and": [
                                   {
+                                    "!!": [
+                                      "{ /vars/oh/t }"
+                                    ]
+                                  },
+                                  {
+                                    "!!": [
+                                      "{ /vars/oh/t/open }"
+                                    ]
+                                  },
+                                  {
                                     ">=": [
                                       "{ /vars/clock/min }",
-                                      "{ /vars/today/fromMin }"
+                                      "{ /vars/oh/t/fromMin }"
                                     ]
                                   },
                                   {
@@ -502,7 +734,23 @@
                                       "{ /vars/clock/min }",
                                       {
                                         "-": [
-                                          "{ /vars/today/toMin }",
+                                          {
+                                            "if": [
+                                              {
+                                                "<=": [
+                                                  "{ /vars/oh/t/toMin }",
+                                                  "{ /vars/oh/t/fromMin }"
+                                                ]
+                                              },
+                                              {
+                                                "+": [
+                                                  "{ /vars/oh/t/toMin }",
+                                                  1440
+                                                ]
+                                              },
+                                              "{ /vars/oh/t/toMin }"
+                                            ]
+                                          },
                                           "{ /store/fields/lastOrderMinutes/en-US }"
                                         ]
                                       }
@@ -511,11 +759,21 @@
                                 ]
                               },
                               {
-                                "or": [
+                                "and": [
                                   {
-                                    ">=": [
-                                      "{ /vars/clock/min }",
-                                      "{ /vars/today/fromMin }"
+                                    "!!": [
+                                      "{ /vars/oh/y }"
+                                    ]
+                                  },
+                                  {
+                                    "!!": [
+                                      "{ /vars/oh/y/open }"
+                                    ]
+                                  },
+                                  {
+                                    "<=": [
+                                      "{ /vars/oh/y/toMin }",
+                                      "{ /vars/oh/y/fromMin }"
                                     ]
                                   },
                                   {
@@ -523,7 +781,7 @@
                                       "{ /vars/clock/min }",
                                       {
                                         "-": [
-                                          "{ /vars/today/toMin }",
+                                          "{ /vars/oh/y/toMin }",
                                           "{ /store/fields/lastOrderMinutes/en-US }"
                                         ]
                                       }
@@ -538,6 +796,28 @@
                     ]
                   },
                   "closed",
+                  {
+                    "and": [
+                      {
+                        ">": [
+                          "{ /payload/tableNo }",
+                          0
+                        ]
+                      },
+                      {
+                        "!!": [
+                          "{ /store/fields/tableCount/en-US }"
+                        ]
+                      },
+                      {
+                        ">": [
+                          "{ /payload/tableNo }",
+                          "{ /store/fields/tableCount/en-US }"
+                        ]
+                      }
+                    ]
+                  },
+                  "table-unknown",
                   "togo-disabled"
                 ]
               }

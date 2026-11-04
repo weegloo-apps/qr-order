@@ -113,6 +113,7 @@ export default {
   'c.err.itemFallback': 'menu ini',
   'c.err.optionFallback': 'opsinya',
   'c.err.togo': 'Saat ini kami tidak menerima pesanan bawa pulang.',
+  'c.err.table': 'Kode QR meja ini sudah tidak dipakai. Silakan tanya staf kami.',
   'c.err.generic': 'Pesanan gagal dikirim. Silakan coba beberapa saat lagi.',
   'c.err.payment': 'Halaman pembayaran gagal dibuka. Silakan coba lagi.',
   'c.err.payMin': 'Total di bawah batas minimum pembayaran kartu.',
